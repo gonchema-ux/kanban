@@ -11,6 +11,8 @@
   (se muestra en la cabecera y en el título del navegador).
 
   LOG DE CAMBIOS (el más reciente primero)
+  14 [kanban_movil_14.html]: (1) la app ya no salta a la pestaña oculta de Montajes al crear una intervención, cambio de molde o ayuda: se queda en la columna de siempre;
+       (2) Estado de limpiezas de moldes: cada molde en dos líneas (referencia, descripción, máquina y fecha arriba; Pendiente / Registros / Estado repartidos debajo).
   13 (a partir de aquí las versiones se numeran: la antigua "M1L" era la 12) [kanban_movil_13.html; el servidor sigue siendo Codigo_gs_movil_m1l.txt]:
        (1) pestaña Montajes e Intervenciones oculta: todas las tareas en la columna En proceso (se ordenan juntas);
        (2) "⚙ Simulador de móvil" en el menú de tres rayas (en el ordenador abre la configuración del simulador);
@@ -1140,6 +1142,13 @@
         .reg-card .col-btn .btn, .reg-card .col-movimientos .btn, .reg-card .col-acciones .btn { min-height: 38px; margin: 0; }
         .reg-card .col-acciones { gap: 6px; }
         .reg-card td { width: auto !important; min-width: 0 !important; max-width: none !important; }
+        /* ===== 14 · Estado de limpiezas de moldes: ficha de dos líneas ===== */
+        .sm-t-m .sm-f1 td { border-bottom: 0 !important; padding-bottom: 3px; }
+        .sm-t-m .sm-f2 td { border-bottom: 1px solid #cbd5e1; padding: 2px 4px 9px; }
+        .sm-chips2 { display: flex; gap: 8px; align-items: center; }
+        .sm-chips2 > * { flex: 1 1 0; min-width: 0; display: flex; align-items: center; justify-content: center; text-align: center; min-height: 34px; }
+        .sm-chips2 .sm-btn { padding: 4px 6px; font-size: 12px; margin: 0; }
+        .sm-chips2 .sm-sub { display: none; }
     </style>
 </head>
 <body class="tab-limpieza">
@@ -2011,7 +2020,7 @@
            ==================================================================== */
 
         // VERSIÓN de la aplicación. Se muestra en la cabecera y en el título. Subirla en cada cambio.
-        const APP_VERSION = '13';
+        const APP_VERSION = '14';
 
         // INTERRUPTOR "Reabrir": si es true se muestra el botón Reabrir en las tarjetas Completado OK
         // (y se pueden arrastrar). Está en false: una tarea acabada no se reabre; se crea una nueva
@@ -2333,6 +2342,7 @@
          * Cambia entre las pestañas principales ("limpieza" o "montajes").
          */
         function switchMainTab(tabName) {
+            tabName = 'limpieza';   // 14: la pestaña Montajes está oculta; todas las tareas se quedan en la misma columna
             currentMainTab = tabName;
             document.getElementById('tab-limpieza').classList.toggle('active', tabName === 'limpieza');
             document.getElementById('tab-montajes').classList.toggle('active', tabName === 'montajes');
@@ -5814,9 +5824,9 @@ function renderMoldesSucios() {
         const esP = f.estado === 'Pendiente', refEsc = escHtml(String(f.ref)).replace(/'/g, '&#39;');
         const estadoTxt = esP ? '<span class="chip-sucio">🧽 Pendiente</span>'
             : `<span class="chip-limpio">✔ Limpio</span><div class="sm-sub">${escHtml(f.tipoLimpieza || '')} · ${smFecha(f.fechaLimpieza)}</div>`;
-        h += `<tr class="sm-fila" onclick="abrirRegistrosMolde('${refEsc}')" title="Ver los últimos registros de esta referencia">
-            <td><strong>${escHtml(formatMoldRefHistorico(f.ref))}</strong><div class="sm-chips">${estadoTxt}<button type="button" class="sm-btn" onclick="event.stopPropagation(); abrirRegistrosMolde('${refEsc}')">🔍 Registros</button><button type="button" class="sm-btn sm-btn2" onclick="event.stopPropagation(); openCambiarEstadoMolde('${refEsc}')">⇄ Estado</button></div></td>
-            <td>${escHtml(f.desc || '-')}</td><td>${escHtml(f.maquina || '-')}</td><td>${smFecha(f.fechaSalida)}</td></tr>`;
+        h += `<tr class="sm-fila sm-f1" onclick="abrirRegistrosMolde('${refEsc}')" title="Ver los últimos registros de esta referencia">
+            <td><strong>${escHtml(formatMoldRefHistorico(f.ref))}</strong></td><td>${escHtml(f.desc || '-')}</td><td>${escHtml(f.maquina || '-')}</td><td>${smFecha(f.fechaSalida)}</td></tr>
+            <tr class="sm-f2"><td colspan="4"><div class="sm-chips2">${estadoTxt}<button type="button" class="sm-btn" onclick="abrirRegistrosMolde('${refEsc}')">🔍 Registros</button><button type="button" class="sm-btn sm-btn2" onclick="openCambiarEstadoMolde('${refEsc}')">⇄ Estado</button></div></td></tr>`;
     });
     document.getElementById('smTabla').innerHTML = h + '</tbody></table>';
 }
