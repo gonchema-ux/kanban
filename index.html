@@ -11,6 +11,11 @@
   (se muestra en la cabecera y en el título del navegador).
 
   LOG DE CAMBIOS (el más reciente primero)
+  13 (a partir de aquí las versiones se numeran: la antigua "M1L" era la 12) [kanban_movil_13.html; el servidor sigue siendo Codigo_gs_movil_m1l.txt]:
+       (1) pestaña Montajes e Intervenciones oculta: todas las tareas en la columna En proceso (se ordenan juntas);
+       (2) "⚙ Simulador de móvil" en el menú de tres rayas (en el ordenador abre la configuración del simulador);
+       (3) botón "Copiar jornada" en el desplegable de horas: deja las tareas del día (borradores y completadas hoy) en un texto listo para pegar;
+       (4) tarjetas del histórico más compactas, con los campos en recuadros (referencia, máquina, tarea, operario, tiempo, fechador) y el comentario en su caja.
   M1l: (1) el orden manual de En proceso se guarda en Sheets (SET_ORDEN, ver Codigo_gs M1l) y se ve igual en el móvil y en el ordenador; (2) Estado de limpiezas de moldes: se ordena por Máq. saliente (menor a mayor) y por Fecha saliente (antigua a reciente) tocando el encabezado; otro toque invierte, otro quita el orden.
   M1k: (1) orden manual de las tareas En proceso con ▲▼ (se guarda en el dispositivo; el contador de horas sigue el mismo orden);
        (2) histórico: cada registro es una ficha y el resumen del periodo (contadores) se abre en una ventana;
@@ -270,6 +275,7 @@
                 guardar();
             }
             $('sgear').onclick = function () { $('spanel').hidden = !$('spanel').hidden; };
+            addEventListener('message', function (e) { if (e.data && e.data.kanbanSim === 'config') $('spanel').hidden = false; });
             $('spre').onchange = function () { cfg.p = +this.value; aplicar(); };
             $('sw').onchange = function () { cfg.w = Math.max(240, +this.value || 412); aplicar(); };
             $('sh').onchange = function () { cfg.h = Math.max(320, +this.value || 915); aplicar(); };
@@ -1114,6 +1120,26 @@
         /* ===== M1l ===== */
         .sm-th-s { cursor: pointer; user-select: none; } .sm-th-s.act { background: #1d4ed8 !important; }
         .sm-th-s .fl { font-size: 10px; opacity: .85; margin-left: 2px; }
+        /* ===== 13 ===== */
+        #tab-montajes { display: none !important; }
+        .hj-btns { display: flex; gap: 8px; margin-top: 10px; } .hj-btns .hj-completar { margin-top: 0; flex: 1.3; } .hj-copiar { flex: 1; min-height: 48px; border: 2px solid #fff; border-radius: 10px; background: transparent; color: #fff; font-size: 14px; font-weight: 800; }
+        /* Histórico: ficha compacta con campos en recuadros */
+        .history-table tbody tr.reg-card { grid-template-columns: repeat(12, 1fr); grid-template-areas: "fecha fecha fecha fecha fecha fecha fecha fecha id id id id" "util util util util util maq maq maq maq modo modo modo" "op op op op op tiempo tiempo tiempo tiempo fechador fechador fechador" "com com com com com com com com com com com com" "btn btn btn mov mov mov acc acc acc acc acc acc"; gap: 6px 8px; padding: 8px 10px; margin: 0 0 8px; border: 1px solid #0d233a; border-left: 1px solid #0d233a; border-radius: 12px; }
+        .reg-card .col-id, .reg-card td.col-id { display: block !important; grid-area: id; justify-self: end; align-self: center; background: #0d233a !important; color: #fff !important; border-radius: 6px; padding: 3px 10px !important; font-size: 12px; font-weight: 700; }
+        .reg-card .col-id::before { content: 'ID '; }
+        .reg-card .col-fecha { display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 8px; font-size: 14px; font-weight: 700; color: #0f172a; }
+        .reg-card .col-util, .reg-card .col-maq, .reg-card .col-modo, .reg-card .col-operario, .reg-card .col-tiempo, .reg-card .col-fechador { position: relative; display: flex !important; align-items: center; gap: 6px; min-height: 42px; border: 1px solid #94a3b8 !important; border-radius: 8px; padding: 15px 8px 4px !important; justify-self: stretch; }
+        .reg-card .col-util::before, .reg-card .col-maq::before, .reg-card .col-modo::before, .reg-card .col-operario::before, .reg-card .col-tiempo::before, .reg-card .col-fechador::before, .reg-card .col-comentario::before { position: absolute; top: 2px; left: 8px; font-size: 10px; font-weight: 400; color: #94a3b8; line-height: 1; }
+        .reg-card .col-util::before { content: 'Referencia utillaje'; } .reg-card .col-maq::before { content: 'Máquina'; } .reg-card .col-modo::before { content: 'Tarea'; }
+        .reg-card .col-operario::before { content: 'Operario'; } .reg-card .col-tiempo::before { content: 'Tiempo'; } .reg-card .col-fechador::before { content: 'Fechador'; }
+        .reg-card .col-util { font-size: 17px; } .reg-card .col-maq { font-size: 17px; } .reg-card .col-modo { justify-content: center; }
+        .reg-card .col-operario { font-size: 12px; line-height: 1.2; } .reg-card .col-operario .op-cell { display: inline; } .reg-card .col-operario .op-num { margin-right: 4px; }
+        .reg-card .col-tiempo { font-size: 13px; } .reg-card .col-fechador { font-size: 14px; }
+        .reg-card .col-comentario { position: relative; border: 1px solid #0d233a !important; border-radius: 10px; padding: 16px 10px 6px !important; margin-top: 2px; }
+        .reg-card .col-comentario::before { content: 'Comentario oficial de tarea'; left: 10px; }
+        .reg-card .col-btn .btn, .reg-card .col-movimientos .btn, .reg-card .col-acciones .btn { min-height: 38px; margin: 0; }
+        .reg-card .col-acciones { gap: 6px; }
+        .reg-card td { width: auto !important; min-width: 0 !important; max-width: none !important; }
     </style>
 </head>
 <body class="tab-limpieza">
@@ -1168,6 +1194,7 @@
         <button type="button" onclick="menuIr('openMoldesSucios()')">🧽 Estado de moldes sucios</button>
         <button type="button" id="menuHistorico" onclick="menuIr('toggleHistoryView()')">📊 Histórico y filtros</button>
         <button type="button" onclick="menuIr('abrirPerf()')">⏱ Rendimiento</button>
+        <button type="button" id="menuSim" onclick="menuIr('abrirSimulador()')">⚙ Simulador de móvil</button>
         <button type="button" class="menu-salir" onclick="menuIr('cerrarSesion()')">🔒 Bloquear y salir</button>
     </nav>
 
@@ -1984,7 +2011,7 @@
            ==================================================================== */
 
         // VERSIÓN de la aplicación. Se muestra en la cabecera y en el título. Subirla en cada cambio.
-        const APP_VERSION = 'M1l';
+        const APP_VERSION = '13';
 
         // INTERRUPTOR "Reabrir": si es true se muestra el botón Reabrir en las tarjetas Completado OK
         // (y se pueden arrastrar). Está en false: una tarea acabada no se reabre; se crea una nueva
@@ -2598,7 +2625,7 @@
         function taskBelongsToTab(task, tab) {
             const desc = (task.desc || '').toLowerCase();
             const esMontajeOIntervencion = desc.includes('cambio') || desc.includes('intervención') || desc.includes('ayuda');
-            return tab === 'montajes' ? esMontajeOIntervencion : !esMontajeOIntervencion;
+            return tab === 'limpieza';   // 13: todas las tareas juntas; la pestaña Montajes está oculta
         }
 
         /**
@@ -5905,7 +5932,7 @@ function actualizarContadorHoras() {
     const ok = Math.abs(total - HORAS_JORNADA) < 0.005, dif = Math.round((total - HORAS_JORNADA) * 100) / 100;
     box.classList.toggle('ok', ok); box.classList.toggle('mal', !ok);
     const cab = '⏱ <b>' + fmtH(total) + ' h</b> de ' + fmtH(HORAS_JORNADA) + ' h · ' + (ok ? '¡jornada completa!' : (dif < 0 ? 'faltan ' + fmtH(-dif) + ' h' : 'sobran ' + fmtH(dif) + ' h')) + (sin ? ' · ' + sin + ' sin tiempo' : '');
-    box.innerHTML = '<div class="hj-cab">' + cab + ' <span class="hj-flecha">▾</span></div><div class="hj-det">' + (filas || 'No hay tareas en proceso.') + '<div class="hj-nota">El tiempo sale del borrador de cada tarea (Guardar borrador).</div><button type="button" class="hj-completar" onclick="event.stopPropagation(); completarTodas()">✔ Completar todas las tareas</button></div>';
+    box.innerHTML = '<div class="hj-cab">' + cab + ' <span class="hj-flecha">▾</span></div><div class="hj-det">' + (filas || 'No hay tareas en proceso.') + '<div class="hj-nota">El tiempo sale del borrador de cada tarea (Guardar borrador).</div><div class="hj-btns"><button type="button" class="hj-copiar" onclick="event.stopPropagation(); copiarJornada()">📋 Copiar jornada</button><button type="button" class="hj-completar" onclick="event.stopPropagation(); completarTodas()">✔ Completar todas</button></div></div>';
 }
 $m('horasJornada').addEventListener('click', e => e.currentTarget.classList.toggle('abierto'));
 ['renderBoard', 'guardarBorradorModal', 'borrarBorrador'].forEach(n => {
@@ -6108,6 +6135,55 @@ function moverTarea(id, dir) {
 function smOrdenar(col) {
     if (smSort.col !== col) smSort = { col: col, dir: 1 }; else if (smSort.dir === 1) smSort.dir = -1; else smSort = { col: null, dir: 1 };
     renderMoldesSucios();
+}
+
+/* ===== 13 ===== */
+/* --- Una sola columna con todas las tareas (la pestaña Montajes queda oculta) --- */
+try { if (currentMainTab !== 'limpieza') switchMainTab('limpieza'); } catch (e) { }
+/* --- Simulador de móvil desde el menú --- */
+function entornoApp() { return window.self !== window.top ? 'marco' : ((matchMedia('(pointer: fine)').matches && innerWidth > 700) ? 'escritorio' : 'movil'); }
+function abrirSimulador() {
+    if (window.self !== window.top) parent.postMessage({ kanbanSim: 'config' }, '*');
+    else location.href = location.href.split('#')[0].split('?')[0] + '?sim=1';
+}
+const _abrirMenuLateral13 = window.abrirMenuLateral;
+window.abrirMenuLateral = function () { _abrirMenuLateral13(); const s = $m('menuSim'); if (s) s.style.display = entornoApp() === 'movil' ? 'none' : ''; };
+/* --- Copiar jornada: texto listo para pegar en la base de datos del trabajo --- */
+const CHECKS_JORNADA = [['chk-asiento', 'Asiento brocales'], ['chk-colada', 'Colada tetones'], ['chk-cordon', 'Cordón silicona'], ['chk-circuito', 'Circuito vacío'], ['chk-pius', 'Revisión de pius o centradores'], ['chk-expulsores', 'Revisión expulsores'], ['chk-placa', 'Estado de limpieza placa eléctrica'], ['chk-bcf', 'Estado de limpieza BCF'], ['chk-boquillas', 'Estado de limpieza de boquillas']];
+function textoJornada() {
+    const hoy = new Date(), mismoDia = d => d && d.getFullYear() === hoy.getFullYear() && d.getMonth() === hoy.getMonth() && d.getDate() === hoy.getDate();
+    const L = [], en = tasks.filter(t => t.status === 'in-progress').sort(ordenManualCmp);
+    let total = 0, n = 0;
+    const cab = (i, maq, ref, tarea, h, quien) => i + ') Máq. ' + (maq || '-') + ' · Utillaje ' + (ref || '-') + ' · Tarea ' + (tarea || '-') + ' · ' + (h === null ? 'sin tiempo' : fmtH(h) + ' h') + (quien ? ' · ' + quien : '');
+    en.forEach(t => {
+        const d = leerBorrador('log:' + t.id), m = (d && d.modal) || {}, h = horasBorrador(t.id); if (h !== null) total += h; n++;
+        L.push('', cab(n, t.machine, t.mold, m.logTaskModeSelect || t.tarea, h, m.logPersonSelect) + (d ? '' : ' · SIN BORRADOR'));
+        if (m['chk-fechador']) L.push('   Fechador: ' + m['chk-fechador']);
+        const ch = CHECKS_JORNADA.filter(([id]) => m[id] === 'OK' || m[id] === 'NOK').map(([id, et]) => et + ' ' + m[id]);
+        if (ch.length) L.push('   Checklist: ' + ch.join(' · '));
+        if (m.machineCounterInput) L.push('   Contador de máquina: ' + m.machineCounterInput);
+        const com = (d && d.texto) || m.auditCommentInput; if (com) L.push('   Comentario: ' + com);
+        if (m.logReasonInput) L.push('   Observaciones: ' + m.logReasonInput);
+    });
+    const hechas = (typeof registros !== 'undefined' ? registros : []).filter(r => !esRegistroAnulado(r) && mismoDia(parseRegistroDate(r.fechaHora)));
+    if (hechas.length) {
+        L.push('', 'COMPLETADAS HOY');
+        hechas.forEach(r => {
+            const h = (r.tiempo !== '' && r.tiempo != null && isFinite(parseFloat(String(r.tiempo).replace(',', '.')))) ? parseFloat(String(r.tiempo).replace(',', '.')) : null; if (h !== null) total += h; n++;
+            L.push('', cab(n, r.maquina, r.refUtillaje, r.tarea, h, r.operario));
+            if (r.fechador) L.push('   Fechador: ' + r.fechador);
+            if (r.comentario) L.push('   Comentario: ' + r.comentario);
+        });
+    }
+    const f = String(hoy.getDate()).padStart(2, '0') + '/' + String(hoy.getMonth() + 1).padStart(2, '0') + '/' + hoy.getFullYear();
+    return ['JORNADA ' + f + ' · ' + n + ' tareas · ' + fmtH(Math.round(total * 100) / 100) + ' h'].concat(n ? L : ['', 'No hay tareas en proceso ni completadas hoy.']).join('\n');
+}
+function copiarJornada() {
+    const t = textoJornada();
+    (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => toastK('📋 Jornada copiada. Ya puedes pegarla.')).catch(() => {
+        const a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select();
+        try { document.execCommand('copy'); toastK('📋 Jornada copiada. Ya puedes pegarla.'); } catch (e) { alert(t); } a.remove();
+    });
 }
 </script>
 </body>
