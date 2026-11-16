@@ -11,6 +11,8 @@
   (se muestra en la cabecera y en el título del navegador).
 
   LOG DE CAMBIOS (el más reciente primero)
+  15 [kanban_movil_15.html + Codigo_gs_movil_15.txt]: (1) menú de tres rayas > "Tamaño de pantalla": porcentaje para ver la interfaz más pequeña o más grande en el móvil (se recuerda);
+       (2) Estado actual de máquinas: al pulsar una fila se abre la ficha con un buscador de referencias para cambiar la de esa máquina sin crear registro (SET_REF_MAQUINA).
   14 [kanban_movil_14.html]: (1) la app ya no salta a la pestaña oculta de Montajes al crear una intervención, cambio de molde o ayuda: se queda en la columna de siempre;
        (2) Estado de limpiezas de moldes: cada molde en dos líneas (referencia, descripción, máquina y fecha arriba; Pendiente / Registros / Estado repartidos debajo).
   13 (a partir de aquí las versiones se numeran: la antigua "M1L" era la 12) [kanban_movil_13.html; el servidor sigue siendo Codigo_gs_movil_m1l.txt]:
@@ -290,6 +292,20 @@
             fr.src = base + '?embed=1'; aplicar();
         });
     })();
+    </script>
+    <script>
+    /* 15 · TAMAÑO DE PANTALLA: en el móvil cambia el ancho que usa la página (la interfaz se ve más pequeña o más grande); en el ordenador usa zoom. Se recuerda en el dispositivo. */
+    window.aplicarEscalaKanban = function (p) {
+        p = Math.max(50, Math.min(130, Math.round(p)));
+        var m = document.querySelector('meta[name="viewport"]'), de = document.documentElement;
+        var movil = window.self === window.top && (matchMedia('(pointer: coarse)').matches || screen.width <= 700);
+        if (movil && m) {
+            de.style.zoom = '';
+            m.setAttribute('content', p === 100 ? 'width=device-width, initial-scale=1.0, viewport-fit=cover' : 'width=' + Math.round(screen.width * 100 / p) + ', viewport-fit=cover');
+        } else { de.style.zoom = (p === 100) ? '' : String(p / 100); }
+        return p;
+    };
+    (function () { try { if (window.__SIM) return; var e = parseInt(localStorage.getItem('kanbanEscala') || '100', 10); if (e && e !== 100) aplicarEscalaKanban(e); } catch (x) { } })();
     </script>
     <title>Kanban Móvil - Moldes</title>
     <style>
@@ -1149,6 +1165,19 @@
         .sm-chips2 > * { flex: 1 1 0; min-width: 0; display: flex; align-items: center; justify-content: center; text-align: center; min-height: 34px; }
         .sm-chips2 .sm-btn { padding: 4px 6px; font-size: 12px; margin: 0; }
         .sm-chips2 .sm-sub { display: none; }
+        /* ===== 15 ===== */
+        #maqDetalleModal .det-modal { overflow-y: auto; }
+        .maq-cambio { margin-top: 14px; padding-top: 12px; border-top: 2px dashed #cbd5e1; }
+        .mc-t { font-weight: 800; font-size: 15px; color: #0d233a; margin-bottom: 8px; }
+        #mcRef { width: 100%; padding: 12px; font-size: 16px; border: 1px solid #94a3b8; border-radius: 10px; box-sizing: border-box; }
+        .mc-info { margin: 8px 0; padding: 8px 10px; background: #f1f5f9; border: 1px dashed #cbd5e1; border-radius: 8px; font-size: 13px; color: #334155; }
+        .mc-info.mal { color: #b91c1c; background: #fee2e2; border-color: #fecaca; }
+        .mc-fila { display: flex; gap: 8px; } #mcBtn { flex: 1.4; min-height: 50px; border: 0; border-radius: 10px; background: #0f766e; color: #fff; font-size: 16px; font-weight: 800; } #mcBtn:disabled { opacity: .4; }
+        .mc-sin { flex: 1; min-height: 50px; border: 1px solid #94a3b8; border-radius: 10px; background: #f8fafc; font-size: 13px; font-weight: 700; color: #334155; }
+        .mc-nota { font-size: 11.5px; color: #64748b; margin-top: 8px; }
+        .esc-p { font-size: 13px; color: #475569; margin: 0 0 8px; text-align: center; } .esc-val { text-align: center; font-size: 34px; font-weight: 800; color: #0d233a; margin: 4px 0 10px; }
+        .esc-ctl { display: flex; align-items: center; gap: 10px; } .esc-ctl input[type=range] { flex: 1; height: 36px; } .esc-ctl button { width: 48px; height: 48px; border: 1px solid #94a3b8; border-radius: 10px; background: #f1f5f9; font-size: 24px; font-weight: 800; }
+        .esc-pre { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; } .esc-pre button { min-height: 46px; border: 1px solid #cbd5e1; border-radius: 10px; background: #fff; font-size: 15px; font-weight: 700; color: #0d233a; }
     </style>
 </head>
 <body class="tab-limpieza">
@@ -1203,6 +1232,7 @@
         <button type="button" onclick="menuIr('openMoldesSucios()')">🧽 Estado de moldes sucios</button>
         <button type="button" id="menuHistorico" onclick="menuIr('toggleHistoryView()')">📊 Histórico y filtros</button>
         <button type="button" onclick="menuIr('abrirPerf()')">⏱ Rendimiento</button>
+        <button type="button" onclick="menuIr('abrirEscala()')">🔍 Tamaño de pantalla</button>
         <button type="button" id="menuSim" onclick="menuIr('abrirSimulador()')">⚙ Simulador de móvil</button>
         <button type="button" class="menu-salir" onclick="menuIr('cerrarSesion()')">🔒 Bloquear y salir</button>
     </nav>
@@ -1723,10 +1753,22 @@
         </div>
     </div>
 
+    <div class="modal" id="escalaModal">
+        <div class="modal-content det-modal">
+            <div class="det-title">🔍 Tamaño de la pantalla</div>
+            <p class="esc-p">Si ves la aplicación demasiado grande, baja el porcentaje. Se guarda en este dispositivo.</p>
+            <div class="esc-val" id="escalaVal">100 %</div>
+            <div class="esc-ctl"><button type="button" onclick="escalaMas(-5)" aria-label="Menos">−</button><input type="range" id="escalaRango" min="50" max="130" step="5" value="100" oninput="document.getElementById('escalaVal').textContent = this.value + ' %'" onchange="ponerEscala(+this.value)"><button type="button" onclick="escalaMas(5)" aria-label="Más">+</button></div>
+            <div class="esc-pre"><button type="button" onclick="ponerEscala(60)">60 %</button><button type="button" onclick="ponerEscala(70)">70 %</button><button type="button" onclick="ponerEscala(80)">80 %</button><button type="button" onclick="ponerEscala(90)">90 %</button><button type="button" onclick="ponerEscala(100)">100 %</button><button type="button" onclick="ponerEscala(110)">110 %</button></div>
+            <div class="modal-actions"><button type="button" class="btn btn-back" onclick="closeModal('escalaModal')">Cerrar</button></div>
+        </div>
+    </div>
+
     <div class="modal" id="maqDetalleModal">
         <div class="modal-content det-modal">
             <div class="det-title">🔍 Registros de máquina</div>
             <div id="maqDetalleBody"></div>
+            <div id="maqCambio" class="maq-cambio"></div>
             <div class="modal-actions"><button type="button" class="btn btn-back" onclick="closeModal('maqDetalleModal')">Cerrar</button></div>
         </div>
     </div>
@@ -2020,7 +2062,7 @@
            ==================================================================== */
 
         // VERSIÓN de la aplicación. Se muestra en la cabecera y en el título. Subirla en cada cambio.
-        const APP_VERSION = '14';
+        const APP_VERSION = '15';
 
         // INTERRUPTOR "Reabrir": si es true se muestra el botón Reabrir en las tarjetas Completado OK
         // (y se pueden arrastrar). Está en false: una tarea acabada no se reabre; se crea una nueva
@@ -6194,6 +6236,55 @@ function copiarJornada() {
         const a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select();
         try { document.execCommand('copy'); toastK('📋 Jornada copiada. Ya puedes pegarla.'); } catch (e) { alert(t); } a.remove();
     });
+}
+
+/* ===== 15 ===== */
+/* --- Tamaño de pantalla --- */
+function abrirEscala() { const e = parseInt(localStorage.getItem('kanbanEscala') || '100', 10) || 100; $m('escalaRango').value = e; $m('escalaVal').textContent = e + ' %'; openModal('escalaModal'); }
+function ponerEscala(p) { p = aplicarEscalaKanban(p); try { localStorage.setItem('kanbanEscala', String(p)); } catch (e) { } $m('escalaRango').value = p; $m('escalaVal').textContent = p + ' %'; }
+function escalaMas(d) { ponerEscala((parseInt($m('escalaRango').value, 10) || 100) + d); }
+/* --- Estado actual de máquinas: ficha + cambio de referencia sin crear registro --- */
+function verMaquinaFila(i) {
+    const d = (window._estadoDet || [])[i]; if (!d) return; const a = d.a; window._mcIdx = i;
+    const par = (h1, v1, h2, v2) => '<div class="det-h">' + h1 + '</div><div class="det-h">' + h2 + '</div><div class="det-v">' + v1 + '</div><div class="det-v">' + v2 + '</div>';
+    $m('maqDetalleBody').innerHTML = '<div class="det-g">' + par('Máq', escHtml(a.maquina), 'Máquina', escHtml(a.denomMaq) + (d.baja ? ' <em>(baja)</em>' : ''))
+        + par('Ref-Utillaje', escHtml(a.refer5), 'Ubicación', escHtml(a.ubicacion))
+        + '<div class="det-h det-w">Descripción</div><div class="det-v det-w det-desc">' + escHtml(a.denom) + '</div>'
+        + par('Fecha', d.fechaTxt, 'Días', d.dias) + '<div class="det-h">Último tipo</div><div class="det-v">' + d.chip + '</div></div>';
+    $m('maqCambio').innerHTML = d.baja ? '<div class="mc-nota">Esta máquina está de baja: no se puede cambiar su referencia.</div>'
+        : '<div class="mc-t">🔁 Cambiar la referencia de esta máquina</div>'
+        + '<input id="mcRef" type="text" list="moldesList" placeholder="Escribe o elige la nueva referencia…" autocomplete="off" oninput="mcValidar()">'
+        + '<div id="mcInfo" class="mc-info">Ubicación: - | Desc: -</div>'
+        + '<div class="mc-fila"><button id="mcBtn" type="button" disabled onclick="mcAplicar()">Aplicar cambio</button><button type="button" class="mc-sin" onclick="$m(\'mcRef\').value=\'0\'; mcValidar()">Sin consigna (0)</button></div>'
+        + '<div class="mc-nota">No crea ningún registro: solo actualiza la máquina (referencia, descripción, ubicación, fecha y último tipo C).</div>';
+    openModal('maqDetalleModal');
+}
+function mcValidar() {
+    const a = window._estadoDet[window._mcIdx].a, ref = $m('mcRef').value.trim(), info = $m('mcInfo'), btn = $m('mcBtn');
+    let ok = false, txt = 'Ubicación: - | Desc: -', mal = false;
+    if (ref !== '') {
+        if (ref === '0') { ok = true; txt = 'Sin consigna (referencia 0)'; }
+        else {
+            const it = findRefer2Item(ref);
+            if (!it) { txt = 'Esa referencia no existe en la base de utillajes.'; mal = true; }
+            else if (esUtillajeBaja(ref)) { txt = 'Ese utillaje está dado de baja.'; mal = true; }
+            else { ok = true; txt = 'Ubicación: ' + getProp(it, 'ubicacion') + ' | Desc: ' + (getProp(it, 'descripcion') !== '-' ? getProp(it, 'descripcion') : getProp(it, 'desc')); }
+        }
+        if (ok && String(ref).replace(/^0+(?=\d)/, '') === String(a.refer5).trim().replace(/^0+(?=\d)/, '')) { ok = false; txt = 'Esa ya es la referencia actual de la máquina.'; mal = true; }
+    }
+    info.textContent = txt; info.classList.toggle('mal', mal); btn.disabled = !ok;
+}
+async function mcAplicar() {
+    const a = window._estadoDet[window._mcIdx].a, ref = $m('mcRef').value.trim(), it = ref === '0' ? null : findRefer2Item(ref);
+    const desc = ref === '0' ? 'sin consigna' : (getProp(it, 'descripcion') !== '-' ? getProp(it, 'descripcion') : getProp(it, 'desc')), ubic = ref === '0' ? '' : getProp(it, 'ubicacion');
+    if (!(await dialogoConfirmar('Máquina ' + a.maquina + ': ' + (a.refer5 || '0') + ' → ' + ref + '\n' + desc + '\n¿Aplicar el cambio? (no se crea ningún registro)'))) return;
+    const btn = $m('mcBtn'); btn.disabled = true; btn.textContent = 'Guardando…';
+    const r = await sendApiPost({ action: 'SET_REF_MAQUINA', payload: { maquina: a.maquina, ref: ref } });
+    if (r && r.status === 'success') {
+        const n = new Date(), p2 = v => String(v).padStart(2, '0');
+        a.refer5 = ref; a.denom = desc; a.ubicacion = (ubic && ubic !== '-') ? ubic : ''; a.fecha = p2(n.getDate()) + '/' + p2(n.getMonth() + 1) + '/' + n.getFullYear() + ' ' + p2(n.getHours()) + ':' + p2(n.getMinutes()) + ':00'; a.tipo = 'C';
+        renderEstadoMaquinas(); closeModal('maqDetalleModal'); toastK('✅ Máquina ' + a.maquina + ' actualizada a ' + ref); try { fetchAllData(true); } catch (e) { }
+    } else { btn.textContent = 'Aplicar cambio'; btn.disabled = false; alert('No se recibió confirmación del servidor. Comprueba la máquina y vuelve a intentarlo.'); }
 }
 </script>
 </body>
