@@ -11,6 +11,9 @@
   (se muestra en la cabecera y en el título del navegador).
 
   LOG DE CAMBIOS (el más reciente primero)
+  18 [kanban_movil_18.html]: "Completar todas" solo exige el contador de máquina en las tareas que ya lo exigen (cambio de molde, cambio de matriz y molde sucio en máquina) y no en las máquinas de la pestaña Excepciones (contador_maquina).
+  17 [kanban_movil_17.html; el servidor sigue siendo Codigo_gs_movil_15.txt]: (1) la ficha de En proceso muestra, en pequeño y solo si está marcado en el borrador, el contador de máquina y el checklist OK/NOK;
+       (2) "Completar todas" solo arranca si TODAS tienen tarea, tiempo, comentario y contador de máquina (si no, no guarda nada y dice qué falta); si durante el proceso sale un aviso o falta algo, se detiene y no sigue con el resto; no repite tareas ya completadas.
   16 [kanban_movil_16.html; el servidor sigue siendo Codigo_gs_movil_15.txt]: (1) tarjeta de En proceso compacta con resumen del borrador (tarea, tiempo, fechador, comentario oficial) y 4 botones pequeños seguidos (Movimientos, Completado OK, Nota, Eliminar; sin Parcial);
        (2) histórico: detalle de la tarea en la ficha y cabecera fija (aplicación, título y filtros); Estado de limpiezas de moldes con cabecera fija;
        (3) Buscar ubicación con dos búsquedas (ubicación por referencia / referencias por ubicación), también en el menú (primera opción);
@@ -1217,6 +1220,13 @@
         #history-view .table-responsive { height: auto !important; max-height: none !important; overflow: visible !important; flex: none !important; }
         #suciosModal .modal-content { padding-top: 0 !important; }
         #suciosModal .sm-head { padding-top: calc(12px + env(safe-area-inset-top)); }
+        /* ===== 17 ===== */
+        .bo-cont { margin-top: 5px; font-size: 11.5px; font-weight: 700; color: #0f172a; }
+        .bo-chk { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px 8px; margin: 6px 0 2px; font-size: 10px; }
+        .bo-ck { display: flex; justify-content: space-between; align-items: center; gap: 3px; }
+        .bo-ck i { font-style: normal; line-height: 1.15; color: #334155; }
+        .bo-ck em { font-style: normal; font-weight: 800; font-size: 8px; color: #fff; border-radius: 3px; padding: 1px 4px; flex: none; }
+        .bo-ck em.ok { background: #16a34a; } .bo-ck em.nok { background: #dc2626; }
     </style>
 </head>
 <body class="tab-limpieza">
@@ -2124,7 +2134,7 @@
            ==================================================================== */
 
         // VERSIÓN de la aplicación. Se muestra en la cabecera y en el título. Subirla en cada cambio.
-        const APP_VERSION = '16';
+        const APP_VERSION = '18';
 
         // INTERRUPTOR "Reabrir": si es true se muestra el botón Reabrir en las tarjetas Completado OK
         // (y se pueden arrastrar). Está en false: una tarea acabada no se reabre; se crea una nueva
@@ -6437,6 +6447,82 @@ function buscarUbicPorRef(val) {
         clearTimeout(timer); timer = setTimeout(function () { try { history.pushState({ k: 'app' }, ''); } catch (e) { } }, 2200);
     });
 })();
+
+/* ===== 17 ===== */
+/* --- Ficha de En proceso: resumen pequeño del borrador (tarea, tiempo, fechador, contador de máquina, checklist marcado y comentario oficial) --- */
+const CHK_CORTO = [['chk-asiento', 'Asiento brocales'], ['chk-colada', 'Colada tetones'], ['chk-cordon', 'Cordón silicona'], ['chk-circuito', 'Circuito vacío'], ['chk-pius', 'Revisión pius o centradores'], ['chk-expulsores', 'Revisión expulsores'], ['chk-placa', 'Limpieza placa eléctrica'], ['chk-bcf', 'Limpieza BCF'], ['chk-boquillas', 'Limpieza boquillas']];
+function buildBorradorHtml(task) {
+    const d = leerBorrador('log:' + task.id), m = (d && d.modal) || {}, h = horasBorrador(task.id);
+    const tarea = m.logTaskModeSelect || '', fech = m['chk-fechador'] || '', com = (d && d.texto) || m.auditCommentInput || '', cont = String(m.machineCounterInput || '').trim();
+    const chk = CHK_CORTO.filter(([id]) => m[id] === 'OK' || m[id] === 'NOK');
+    if (!tarea && h === null && !fech && !com && !cont && !chk.length) return '';
+    const caja = (et, v) => v ? '<span class="bo-it">' + et + ' <b class="bo-box">' + escHtml(v) + '</b></span>' : '';
+    return '<div class="kc-bor"><div class="bo-top">' + caja('Tarea', tarea) + caja('Tiempo', h === null ? '' : fmtH(h) + ' h') + caja('Fechador', fech) + '</div>'
+        + (cont ? '<div class="bo-cont">Contador máquina <b class="bo-box">' + escHtml(cont) + '</b></div>' : '')
+        + (chk.length ? '<div class="bo-chk">' + chk.map(([id, et]) => '<span class="bo-ck"><i>' + et + '</i><em class="' + (m[id] === 'OK' ? 'ok' : 'nok') + '">' + m[id] + '</em></span>').join('') + '</div>' : '')
+        + (com ? '<div class="bo-t">Comentario oficial de tareas realizadas</div><div class="bo-c">' + escHtml(com) + '</div>' : '') + '</div>';
+}
+/* --- Completar todas: solo si TODAS tienen tarea, tiempo, comentario y contador de máquina; si algo falla se detiene y no sigue --- */
+function faltantesBorrador(t) {
+    const d = leerBorrador('log:' + t.id), m = (d && d.modal) || {}, f = [];
+    if (!d) return ['borrador'];
+    if (!m.logTaskModeSelect) f.push('tarea');
+    if (horasBorrador(t.id) === null) f.push('tiempo');
+    if (!String((d.texto || m.auditCommentInput || '')).trim()) f.push('comentario');
+    if (requiereContador(t) && !String(m.machineCounterInput || '').trim()) f.push('contador de máquina');
+    return f;
+}
+function esperarGuardado(id) {
+    return new Promise(res => {
+        const ini = Date.now(); let ultima = ini;
+        const iv = setInterval(() => {
+            const tk = tasks.find(x => String(x.id) === String(id)), abierto = $m('logModal').style.display === 'flex';
+            const ov = $m('loading-overlay'), cargando = ov && getComputedStyle(ov).display !== 'none';
+            if (cargando) ultima = Date.now();
+            if (document.querySelector('.dlg-ov')) { clearInterval(iv); res('aviso'); }
+            else if (tk && tk.status === 'done' && !abierto && !cargando) { clearInterval(iv); res('ok'); }
+            else if ((abierto && !cargando && Date.now() - ultima > 3000) || Date.now() - ini > 120000) { clearInterval(iv); res('parado'); }
+        }, 250);
+    });
+}
+async function completarTodas() {
+    if (completandoTodas) return;
+    const en = tasks.filter(t => t.status === 'in-progress').sort(ordenManualCmp);
+    if (!en.length) { alert('No hay tareas en proceso.'); return; }
+    const faltas = en.map(t => [t, faltantesBorrador(t)]).filter(x => x[1].length);
+    if (faltas.length) { alert('⚠️ Todavía no se pueden completar todas. Falta en:\n' + faltas.map(([t, f]) => '• ' + (t.desc || t.tarea || '') + ' · Máq. ' + (t.machine || '-') + ': ' + f.join(', ')).join('\n') + '\nCompleta el borrador de cada una (tarea, tiempo, comentario y, si la tarea lo pide, contador de máquina). No se ha guardado nada.'); return; }
+    const total = Math.round(en.reduce((s, t) => s + horasBorrador(t.id), 0) * 100) / 100;
+    let msg = 'Se van a confirmar y guardar ' + en.length + ' tareas como Completado OK (' + fmtH(total) + ' h en total).';
+    if (Math.abs(total - HORAS_JORNADA) > 0.005) msg += '\n⚠️ El total no es ' + fmtH(HORAS_JORNADA) + ' h.';
+    if (!(await dialogoConfirmar(msg + '\n¿Continuar?'))) return;
+    completandoTodas = true; const ids = en.map(t => String(t.id)); let hechas = 0, parada = null;
+    try {
+        for (const id of ids) {
+            const t = tasks.find(x => String(x.id) === id);
+            if (!t || t.status !== 'in-progress') continue;                                                    // ya completada: no se repite
+            if (registros.some(r => sameId(r.idTarea, id) && String(r.tipo).trim().toLowerCase() === 'completado' && !esRegistroAnulado(r))) continue;
+            if (document.querySelector('.dlg-ov') || [...document.querySelectorAll('.modal')].some(m => m.style.display === 'flex')) { parada = [t, 'había una ventana abierta']; break; }
+            requestMove(id, 'done'); await esperaMs(700);
+            const v = i => { const e = $m(i); return e ? String(e.value || '').trim() : ''; };
+            if (!v('logTaskModeSelect') || !v('taskTimeInput') || !v('auditCommentInput') || (requiereContador(t) && !v('machineCounterInput'))) { parada = [t, 'no se cargaron todos los datos del borrador']; break; }
+            $m('logForm').requestSubmit();
+            const r = await esperarGuardado(id);
+            if (r !== 'ok') { parada = [t, r === 'aviso' ? 'la aplicación mostró un aviso' : 'faltaba algún dato']; break; }
+            hechas++; await esperaMs(900);
+        }
+    } finally { completandoTodas = false; }
+    actualizarContadorHoras();
+    if (parada) alert('⏹ Me paré en "' + (parada[0].desc || parada[0].tarea || '') + ' · Máq. ' + (parada[0].machine || '-') + '" (' + parada[1] + '). Completadas: ' + hechas + ' de ' + ids.length + '. El resto no se ha tocado. Revisa la ventana abierta y vuelve a pulsar "Completar todas": las ya guardadas no se repiten.');
+    else alert('✅ Jornada cerrada: ' + hechas + ' tareas completadas y guardadas. Ya puedes empezar una nueva jornada.');
+}
+
+/* ===== 18 · el contador de máquina solo se exige donde la aplicación ya lo exige ===== */
+/* Regla de siempre: cambio de molde, cambio de matriz o molde sucio en máquina, salvo las máquinas de la pestaña Excepciones (columna contador_maquina). */
+function requiereContador(t) {
+    const d = String((t && t.desc) || '').toLowerCase();
+    const pide = d.includes('cambio de molde') || d.includes('cambio de matriz') || d.includes('molde sucio en máquina');
+    return pide && !dbExcepciones.map(normMaq).includes(normMaq(String(t.machine || '').trim()));
+}
 </script>
 </body>
 </html>
