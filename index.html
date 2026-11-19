@@ -11,6 +11,8 @@
   (se muestra en la cabecera y en el título del navegador).
 
   LOG DE CAMBIOS (el más reciente primero)
+  19 [kanban_movil_19.html; el servidor sigue siendo Codigo_gs_movil_15.txt]: (1) En proceso como libro: una tarea por hoja, flechas y "3 de N" abajo (pulsar el indicador abre la lista de hojas), deslizar con el dedo;
+       (2) orden: pulsar "Hoja 3 de 6" pregunta la posición (las demás se desplazan) y las flechas ◀ ▶ mueven la hoja; se guarda en Sheets como antes; (3) botón "Copiar" en el comentario oficial de la ficha.
   18 [kanban_movil_18.html]: "Completar todas" solo exige el contador de máquina en las tareas que ya lo exigen (cambio de molde, cambio de matriz y molde sucio en máquina) y no en las máquinas de la pestaña Excepciones (contador_maquina).
   17 [kanban_movil_17.html; el servidor sigue siendo Codigo_gs_movil_15.txt]: (1) la ficha de En proceso muestra, en pequeño y solo si está marcado en el borrador, el contador de máquina y el checklist OK/NOK;
        (2) "Completar todas" solo arranca si TODAS tienen tarea, tiempo, comentario y contador de máquina (si no, no guarda nada y dice qué falta); si durante el proceso sale un aviso o falta algo, se detiene y no sigue con el resto; no repite tareas ya completadas.
@@ -1227,6 +1229,25 @@
         .bo-ck i { font-style: normal; line-height: 1.15; color: #334155; }
         .bo-ck em { font-style: normal; font-weight: 800; font-size: 8px; color: #fff; border-radius: 3px; padding: 1px 4px; flex: none; }
         .bo-ck em.ok { background: #16a34a; } .bo-ck em.nok { background: #dc2626; }
+        /* ===== 19 · libro ===== */
+        #col-in-progress { display: flex !important; flex-wrap: nowrap !important; gap: 12px; overflow-x: auto !important; overflow-y: hidden !important; max-height: none !important; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; scrollbar-width: none; align-items: flex-start; }
+        #col-in-progress::-webkit-scrollbar { display: none; }
+        #col-in-progress > .card { flex: 0 0 100%; min-width: 0; box-sizing: border-box; scroll-snap-align: center; scroll-snap-stop: always; margin: 0 !important; }
+        body.con-libro .view-container { padding-bottom: 150px; }
+        .libro-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 850; display: none; align-items: center; gap: 8px; padding: 8px 12px calc(8px + env(safe-area-inset-bottom)); background: #fff; border-top: 1px solid #cbd5e1; box-shadow: 0 -3px 12px rgba(0,0,0,.12); }
+        .libro-bar button { min-height: 50px; border: 1px solid #94a3b8; border-radius: 12px; background: #f1f5f9; font-size: 22px; font-weight: 800; color: #0d233a; }
+        #lbPrev, #lbNext { flex: 1; } #lbPos { flex: 1.6; font-size: 16px; background: #0d233a; color: #fff; border-color: #0d233a; } .libro-bar button:disabled { opacity: .3; }
+        body.con-libro #newRequestBtn { bottom: calc(76px + env(safe-area-inset-bottom)); }
+        .mover-bar { justify-content: space-between; }
+        .mover-bar .mv-num { min-width: 0; padding: 0 12px; min-height: 38px; background: #0d233a; color: #fff; border-color: #0d233a; font-size: 14px; font-weight: 600; } .mover-bar .mv-num b { font-size: 16px; }
+        .hj-item { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 52px; margin: 0 0 6px; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 10px; background: #fff; text-align: left; font-size: 14px; }
+        .hj-item.act { border-color: #0d233a; background: #e0f2fe; } .hj-item b { flex: none; width: 26px; height: 26px; border-radius: 50%; background: #0d233a; color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; } .hj-item span { flex: 1; } .hj-item em { flex: none; font-style: normal; font-size: 12px; color: #475569; }
+        #hojasModal .det-modal { overflow-y: auto; }
+        #posInput { width: 100%; padding: 12px; font-size: 22px; font-weight: 800; text-align: center; border: 2px solid #0d233a; border-radius: 12px; box-sizing: border-box; }
+        .pos-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; } .pos-chip { width: 46px; height: 46px; border: 1px solid #94a3b8; border-radius: 10px; background: #fff; font-size: 16px; font-weight: 800; color: #0d233a; } .pos-chip.act { background: #0d233a; color: #fff; }
+        #posTxt { text-align: center; font-size: 15px; color: #0f172a; margin: 0 0 12px; line-height: 1.4; }
+        .bo-th { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 6px 0 2px; } .bo-th .bo-t { margin: 0; }
+        .bo-copy { flex: none; min-height: 34px; padding: 0 10px; border: 1px solid #0d233a; border-radius: 8px; background: #f1f5f9; font-size: 12px; font-weight: 800; color: #0d233a; }
     </style>
 </head>
 <body class="tab-limpieza">
@@ -1836,6 +1857,26 @@
         </div>
     </div>
 
+    <div class="libro-bar" id="libroBar"><button type="button" id="lbPrev" onclick="hojaMas(-1)" aria-label="Hoja anterior">◀</button><button type="button" id="lbPos" onclick="abrirListaHojas()">1 de 1</button><button type="button" id="lbNext" onclick="hojaMas(1)" aria-label="Hoja siguiente">▶</button></div>
+
+    <div class="modal" id="hojasModal">
+        <div class="modal-content det-modal">
+            <div class="det-title">📖 Hojas de la jornada</div>
+            <div id="hojasLista"></div>
+            <div class="modal-actions"><button type="button" class="btn btn-back" onclick="closeModal('hojasModal')">Cerrar</button></div>
+        </div>
+    </div>
+
+    <div class="modal" id="posModal">
+        <div class="modal-content det-modal">
+            <div class="det-title">🔢 Orden de la hoja</div>
+            <div id="posTxt"></div>
+            <input id="posInput" type="number" inputmode="numeric" min="1" onkeydown="if(event.key==='Enter'){event.preventDefault();moverAPosicion();}">
+            <div class="pos-chips" id="posChips"></div>
+            <div class="modal-actions" style="display:flex;gap:8px;"><button type="button" class="btn btn-back" style="flex:1" onclick="closeModal('posModal')">Cancelar</button><button type="button" class="btn" style="flex:1;background:#0f766e;color:#fff" onclick="moverAPosicion()">Mover</button></div>
+        </div>
+    </div>
+
     <div class="modal" id="maqDetalleModal">
         <div class="modal-content det-modal">
             <div class="det-title">🔍 Registros de máquina</div>
@@ -2134,7 +2175,7 @@
            ==================================================================== */
 
         // VERSIÓN de la aplicación. Se muestra en la cabecera y en el título. Subirla en cada cambio.
-        const APP_VERSION = '18';
+        const APP_VERSION = '19';
 
         // INTERRUPTOR "Reabrir": si es true se muestra el botón Reabrir en las tarjetas Completado OK
         // (y se pueden arrastrar). Está en false: una tarea acabada no se reabre; se crea una nueva
@@ -3599,7 +3640,7 @@
                 card.ondragstart = (e) => drag(e, task.id);
 
                 card.innerHTML = `
-                    <div class="mover-bar"><b>${_pos + 1}</b><span>Orden</span><button type="button" onclick="moverTarea('${task.id}', -1)" ${_pos === 0 ? 'disabled' : ''} aria-label="Subir">▲</button><button type="button" onclick="moverTarea('${task.id}', 1)" ${_pos === inProgressTasks.length - 1 ? 'disabled' : ''} aria-label="Bajar">▼</button></div>
+                    <div class="mover-bar"><button type="button" class="mv-num" onclick="pedirPosicion('${task.id}')" title="Cambiar el orden de esta hoja">Hoja <b>${_pos + 1}</b> de ${inProgressTasks.length} ✎</button><span style="display:flex;gap:8px;align-items:center;"><small style="font-size:11px;color:#64748b;">Mover hoja</small><button type="button" onclick="moverTarea('${task.id}', -1)" ${_pos === 0 ? 'disabled' : ''} aria-label="Mover antes">◀</button><button type="button" onclick="moverTarea('${task.id}', 1)" ${_pos === inProgressTasks.length - 1 ? 'disabled' : ''} aria-label="Mover después">▶</button></span></div>
                     ${buildCardInnerEP(task, actionsHtml)}
                 `;
                 colInProgress.appendChild(card);
@@ -6368,7 +6409,7 @@ function buildBorradorHtml(task) {
     if (!tarea && h === null && !fech && !com) return '';
     const caja = (et, v) => v ? '<span class="bo-it">' + et + ' <b class="bo-box">' + escHtml(v) + '</b></span>' : '';
     return '<div class="kc-bor"><div class="bo-top">' + caja('Tarea', tarea) + caja('Tiempo', h === null ? '' : fmtH(h) + ' h') + caja('Fechador', fech) + '</div>'
-        + (com ? '<div class="bo-t">Comentario oficial de tareas realizadas</div><div class="bo-c">' + escHtml(com) + '</div>' : '') + '</div>';
+        + (com ? '<div class="bo-th"><span class="bo-t">Comentario oficial de tareas realizadas</span><button type="button" class="bo-copy" onclick="event.stopPropagation(); copiarComentario(\'' + task.id + '\')">📋 Copiar</button></div><div class="bo-c">' + escHtml(com) + '</div>' : '') + '</div>';
 }
 function buildCardInnerEP(task, actionsHtml) {
     const ubic = String(task.ubicacion || '').trim(), mdesc = String(task.moldDesc || '').trim(), sinDato = v => v === '' || v === 'N/A' || v === '-';
@@ -6523,6 +6564,84 @@ function requiereContador(t) {
     const pide = d.includes('cambio de molde') || d.includes('cambio de matriz') || d.includes('molde sucio en máquina');
     return pide && !dbExcepciones.map(normMaq).includes(normMaq(String(t.machine || '').trim()));
 }
+
+/* ===== 19 · EN PROCESO COMO LIBRO (una tarea por hoja) + orden por número + copiar comentario ===== */
+var __libroId = null;
+const libroEl = () => document.getElementById('col-in-progress');
+function hojas() { const c = libroEl(); return c ? [...c.querySelectorAll(':scope > .card')] : []; }
+function hojaActual() {
+    const c = libroEl(), hs = hojas(); if (!c || !hs.length) return -1;
+    const ancho = hs[0].getBoundingClientRect().width + 12; return Math.max(0, Math.min(hs.length - 1, Math.round(c.scrollLeft / ancho)));
+}
+function actualizarLibro() {
+    const hs = hojas(), bar = $m('libroBar'); if (!bar) return;
+    const kv = $m('kanban-view'), visible = hs.length > 0 && (typeof currentView === 'undefined' || currentView === 'kanban');
+    bar.style.display = visible ? 'flex' : 'none'; document.body.classList.toggle('con-libro', visible);
+    if (!visible) return;
+    const i = hojaActual(); __libroId = hs[i] ? hs[i].id : null;
+    $m('lbPos').textContent = (i + 1) + ' de ' + hs.length; $m('lbPrev').disabled = i <= 0; $m('lbNext').disabled = i >= hs.length - 1;
+}
+function irAHoja(i, suave) {
+    const c = libroEl(), hs = hojas(); if (!c || !hs.length) return;
+    if (typeof i === 'string') { const k = hs.findIndex(h => h.id === i); i = k >= 0 ? k : 0; }
+    i = Math.max(0, Math.min(hs.length - 1, i));
+    c.style.scrollBehavior = suave ? 'smooth' : 'auto'; c.scrollLeft = i * (hs[0].getBoundingClientRect().width + 12);
+    if (!suave) c.style.scrollBehavior = ''; setTimeout(actualizarLibro, suave ? 350 : 0);
+}
+function hojaMas(d) { irAHoja(hojaActual() + d, true); }
+(function () {
+    const c = libroEl(); if (!c) return; let raf = 0;
+    c.addEventListener('scroll', () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(actualizarLibro); }, { passive: true });
+})();
+const _renderBoard19 = window.renderBoard;
+window.renderBoard = function () {
+    const c = libroEl(), antes = Math.max(0, hojaActual()), id = __libroId;
+    const r = _renderBoard19.apply(this, arguments);
+    const hs = hojas(); if (hs.length) { const k = id ? hs.findIndex(h => h.id === id) : -1; irAHoja(k >= 0 ? k : Math.min(antes, hs.length - 1), false); } else actualizarLibro();
+    return r;
+};
+const _toggleHistoryView19 = window.toggleHistoryView; window.toggleHistoryView = function () { const r = _toggleHistoryView19.apply(this, arguments); setTimeout(actualizarLibro, 60); return r; };
+/* --- lista de hojas (se abre al pulsar "3 de 6") --- */
+function abrirListaHojas() {
+    const hs = hojas(), i = hojaActual();
+    $m('hojasLista').innerHTML = hs.map((h, k) => { const t = tasks.find(x => String(x.id) === h.id) || {}, hh = horasBorrador(h.id);
+        return '<button type="button" class="hj-item' + (k === i ? ' act' : '') + '" onclick="closeModal(\'hojasModal\'); irAHoja(' + k + ', true)"><b>' + (k + 1) + '</b><span>' + escM((t.desc || '') + ' · Máq. ' + (t.machine || '-')) + '</span><em>' + (hh === null ? 'sin tiempo' : fmtH(hh) + ' h') + '</em></button>'; }).join('');
+    openModal('hojasModal');
+}
+/* --- orden: guardar y mover (flechas o escribiendo la posición) --- */
+function aplicarOrden(ids) {
+    const vivos = new Set(tasks.filter(t => t.status === 'in-progress').map(t => String(t.id)));
+    const nuevo = ids.concat(leerOrden().filter(x => !ids.includes(x) && vivos.has(x)));
+    window.__ordenServidor = nuevo; ordenUltimoCambio = Date.now();
+    try { localStorage.setItem(ORDEN_CLAVE, JSON.stringify(nuevo)); } catch (e) { }
+    clearTimeout(ordenPendienteEnvio); ordenPendienteEnvio = setTimeout(enviarOrden, 1500);
+}
+function moverTarea(id, dir) {
+    const ids = hojas().map(c => c.id), i = ids.indexOf(String(id)), j = i + dir; if (i < 0 || j < 0 || j >= ids.length) return;
+    [ids[i], ids[j]] = [ids[j], ids[i]]; aplicarOrden(ids); __libroId = String(id); renderBoard(); actualizarContadorHoras();
+}
+let posId = null;
+function pedirPosicion(id) {
+    const ids = hojas().map(c => c.id), i = ids.indexOf(String(id)); if (i < 0) return; posId = String(id);
+    $m('posTxt').innerHTML = 'Esta tarea es la orden <b>' + (i + 1) + '</b> de <b>' + ids.length + '</b>.<br>¿En qué posición la quieres?';
+    const inp = $m('posInput'); inp.min = 1; inp.max = ids.length; inp.value = i + 1;
+    $m('posChips').innerHTML = ids.map((_, k) => '<button type="button" class="pos-chip' + (k === i ? ' act' : '') + '" onclick="document.getElementById(\'posInput\').value=' + (k + 1) + '; moverAPosicion()">' + (k + 1) + '</button>').join('');
+    openModal('posModal'); setTimeout(() => { inp.focus(); inp.select(); }, 150);
+}
+function moverAPosicion() {
+    const ids = hojas().map(c => c.id), i = ids.indexOf(posId); if (i < 0) { closeModal('posModal'); return; }
+    let p = parseInt($m('posInput').value, 10); if (!isFinite(p)) return; p = Math.max(1, Math.min(ids.length, p));
+    closeModal('posModal'); if (p - 1 === i) return;
+    ids.splice(i, 1); ids.splice(p - 1, 0, posId); aplicarOrden(ids); __libroId = posId; renderBoard(); actualizarContadorHoras(); toastK('Hoja movida a la posición ' + p + ' de ' + ids.length);
+}
+/* --- copiar el comentario oficial del borrador --- */
+function copiarComentario(id) {
+    const d = leerBorrador('log:' + id), m = (d && d.modal) || {}, t = String((d && d.texto) || m.auditCommentInput || '').trim(); if (!t) { toastK('No hay comentario que copiar'); return; }
+    (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => toastK('📋 Comentario copiado')).catch(() => {
+        const a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select(); try { document.execCommand('copy'); toastK('📋 Comentario copiado'); } catch (e) { alert(t); } a.remove();
+    });
+}
+setTimeout(actualizarLibro, 300);
 </script>
 </body>
 </html>
