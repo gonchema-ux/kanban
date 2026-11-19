@@ -11,6 +11,8 @@
   (se muestra en la cabecera y en el título del navegador).
 
   LOG DE CAMBIOS (el más reciente primero)
+  21 [kanban_movil_21.html; el servidor sigue siendo Codigo_gs_movil_15.txt]: un solo botón "+ Nueva Solicitud" (el flotante desaparece); los 4 botones de la tarea (movimientos, completado OK, nota, eliminar) fijos abajo para la hoja actual;
+       fila inferior con copiar (izquierda), ◀, "N de M ✎" (pulsarlo cambia el orden) y ▶; se quitan "Hoja N de M" y "Mover hoja"; la pantalla se mantiene fija también sin tareas.
   20 [kanban_movil_20.html; el servidor sigue siendo Codigo_gs_movil_15.txt]: pantalla de tareas sin scroll de anchura ni de altura (solo el comentario oficial tiene scroll propio): se quitan la pestaña y la línea de actualización,
        "+ Nueva Solicitud" pasa a la fila de En proceso, la ficha se reordena (caja con máquina, referencia, descripción, ubicación, solicita), comentario oficial una letra más grande y barra inferior con copiar, "Hoja X de N" (orden por número),
        mover hoja ◀ ▶ y la navegación. El menú tiene "Recargar todo" (antes se hacía pulsando la línea de actualización).
@@ -1278,6 +1280,20 @@
         .lb-mover { flex: none; font-size: 11px; color: #64748b; }
         .libro-bar #lbMovPrev, .libro-bar #lbMovNext { flex: 0 0 48px; min-height: 46px; font-size: 18px; }
         .libro-bar .lb-fila2 button { min-height: 46px; }
+        /* ===== 21 ===== */
+        #newRequestBtn { display: none !important; }
+        body.con-libro .card-actions-4 { display: none !important; }
+        #col-in-progress:empty::before { content: 'No hay tareas en proceso. Pulsa «+ Nueva Solicitud» para crear una.'; display: block; width: 100%; padding: 30px 16px; text-align: center; color: #64748b; font-size: 15px; }
+        .lb-fila1 { display: flex; gap: 6px; }
+        .libro-bar .lb-fila1 .btn { flex: 1 1 0; min-width: 0; min-height: 50px; padding: 2px 4px; font-size: 14px; line-height: 1.1; border-radius: 10px; }
+        .libro-bar .lb-fila1 .btn-mov { flex: 0 0 74px; background: #475569; color: #fff; border: 0; }
+        .libro-bar .lb-fila1 .btn-complete { flex: 1.3 1 0; } .libro-bar .lb-fila1 .btn-complete small { display: block; font-size: 8.5px; font-weight: 800; letter-spacing: .3px; } .libro-bar .lb-fila1 .btn-complete b { font-size: 15px; }
+        .libro-bar.lb-bloqueado .lb-fila1 { opacity: .5; pointer-events: none; }
+        .libro-bar .lb-copy { flex: 0 0 62px; }
+        .libro-bar .lb-fila2 #lbPrev, .libro-bar .lb-fila2 #lbNext { flex: 1; } .libro-bar .lb-fila2 #lbPos { flex: 1.8; font-size: 16px; }
+        .libro-bar .lb-fila1 .btn-complete { background: #28a745; color: #fff; border: 0; }
+        .libro-bar .lb-fila1 .btn-comment { background: #dbeafe; color: #075985; border: 1px solid #bfdbfe; }
+        .libro-bar .lb-fila1 .btn-delete { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
     </style>
 </head>
 <body class="tab-limpieza">
@@ -1889,8 +1905,8 @@
     </div>
 
     <div class="libro-bar" id="libroBar">
-        <div class="lb-fila1"><button type="button" id="lbCopy" class="lb-copy" onclick="copiarComentarioActual()" title="Copiar el comentario oficial" aria-label="Copiar comentario">📋</button><button type="button" id="lbHoja" onclick="pedirPosicion(__libroId)">Hoja 1 de 1 ✎</button><span class="lb-mover">Mover hoja</span><button type="button" id="lbMovPrev" onclick="moverTarea(__libroId, -1)" aria-label="Mover antes">◀</button><button type="button" id="lbMovNext" onclick="moverTarea(__libroId, 1)" aria-label="Mover después">▶</button></div>
-        <div class="lb-fila2"><button type="button" id="lbPrev" onclick="hojaMas(-1)" aria-label="Hoja anterior">◀</button><button type="button" id="lbPos" onclick="abrirListaHojas()">1 de 1</button><button type="button" id="lbNext" onclick="hojaMas(1)" aria-label="Hoja siguiente">▶</button></div>
+        <div class="lb-fila1"><button type="button" id="lbAMov" class="btn btn-mov" onclick="lbAccion('.btn-mov')" title="Movimientos"></button><button type="button" id="lbAOk" class="btn btn-complete" onclick="lbAccion('.btn-complete')"></button><button type="button" id="lbANota" class="btn btn-comment" onclick="lbAccion('.btn-comment')"></button><button type="button" id="lbADel" class="btn btn-delete" onclick="lbAccion('.btn-delete')" title="Eliminar tarea"></button></div>
+        <div class="lb-fila2"><button type="button" id="lbCopy" class="lb-copy" onclick="copiarComentarioActual()" title="Copiar el comentario oficial" aria-label="Copiar comentario">📋</button><button type="button" id="lbPrev" onclick="hojaMas(-1)" aria-label="Hoja anterior">◀</button><button type="button" id="lbPos" onclick="pedirPosicion(__libroId)" title="Cambiar el orden de esta hoja">1 de 1 ✎</button><button type="button" id="lbNext" onclick="hojaMas(1)" aria-label="Hoja siguiente">▶</button></div>
     </div>
 
     <div class="modal" id="hojasModal">
@@ -1907,6 +1923,7 @@
             <div id="posTxt"></div>
             <input id="posInput" type="number" inputmode="numeric" min="1" onkeydown="if(event.key==='Enter'){event.preventDefault();moverAPosicion();}">
             <div class="pos-chips" id="posChips"></div>
+            <button type="button" class="btn" style="width:100%;margin-bottom:8px;background:#e2e8f0;" onclick="closeModal('posModal'); abrirListaHojas()">📖 Ver todas las hojas</button>
             <div class="modal-actions" style="display:flex;gap:8px;"><button type="button" class="btn btn-back" style="flex:1" onclick="closeModal('posModal')">Cancelar</button><button type="button" class="btn" style="flex:1;background:#0f766e;color:#fff" onclick="moverAPosicion()">Mover</button></div>
         </div>
     </div>
@@ -2209,7 +2226,7 @@
            ==================================================================== */
 
         // VERSIÓN de la aplicación. Se muestra en la cabecera y en el título. Subirla en cada cambio.
-        const APP_VERSION = '20';
+        const APP_VERSION = '21';
 
         // INTERRUPTOR "Reabrir": si es true se muestra el botón Reabrir en las tarjetas Completado OK
         // (y se pueden arrastrar). Está en false: una tarea acabada no se reabre; se crea una nueva
@@ -6514,7 +6531,7 @@ function buscarUbicPorRef(val) {
     }
     try { history.replaceState({ k: 'base' }, ''); } catch (e) { }
     let activado = false;
-    addEventListener('pointerdown', function () { if (activado) return; activado = true; try { history.pushState({ k: 'app' }, ''); } catch (e) { } }, { capture: true });   // el navegador solo cuenta la entrada si hubo un toque del usuario
+    var armando = false; addEventListener('pointerdown', function () { if (activado || armando) return; armando = true; setTimeout(function () { activado = true; try { history.pushState({ k: 'app' }, ''); } catch (e) { } }, 900); }, { capture: true });   // 21: con retardo; si se hace en el mismo toque cancela el primer desplazamiento de hoja   // el navegador solo cuenta la entrada si hubo un toque del usuario
     addEventListener('popstate', function () {
         if (!activado) return;
         if (cerrarCapa()) { try { history.pushState({ k: 'app' }, ''); } catch (e) { } return; }
@@ -6718,6 +6735,37 @@ function copiarComentarioActual() { if (__libroId) copiarComentario(__libroId); 
     const b = document.createElement('button'); b.type = 'button'; b.className = 'btn-nueva-mini'; b.textContent = '+ Nueva Solicitud'; b.onclick = () => { try { document.getElementById('newRequestBtn').click(); } catch (e) { } }; hd.appendChild(b);
 })();
 setTimeout(actualizarLibro, 300);
+
+/* ===== 21 · acciones y navegación fijas abajo; un solo botón "Nueva Solicitud" ===== */
+function lbAccion(sel) { const c = __libroId ? document.getElementById(__libroId) : null, b = c && c.querySelector('.card-actions ' + sel); if (b && !b.disabled) b.click(); }
+function actualizarLibro() {
+    const hs = hojas(), bar = $m('libroBar'); if (!bar) return;
+    const vistaKanban = (typeof currentView === 'undefined' || currentView === 'kanban');
+    document.body.classList.toggle('con-libro', vistaKanban);
+    bar.style.display = (vistaKanban && hs.length > 0) ? 'flex' : 'none';
+    if (!vistaKanban || !hs.length) return;
+    const i = hojaActual(), n = hs.length, card = hs[i]; __libroId = card ? card.id : null;
+    $m('lbPos').innerHTML = (i + 1) + ' de ' + n + ' ✎'; $m('lbPrev').disabled = i <= 0; $m('lbNext').disabled = i >= n - 1;
+    const d = leerBorrador('log:' + __libroId), m = (d && d.modal) || {}; $m('lbCopy').disabled = !String((d && d.texto) || m.auditCommentInput || '').trim();
+    [['lbAMov', '.btn-mov'], ['lbAOk', '.btn-complete'], ['lbANota', '.btn-comment'], ['lbADel', '.btn-delete']].forEach(([id, sel]) => { const b = card && card.querySelector('.card-actions ' + sel); $m(id).innerHTML = b ? b.innerHTML : ''; });
+    bar.classList.toggle('lb-bloqueado', !!(card && card.querySelector('.card-actions.kc-disabled')));
+}
+setTimeout(actualizarLibro, 300);
+/* hojas: posición real de cada tarjeta (no una estimación) y scroll explícito */
+function hojaActual() {
+    const c = libroEl(), hs = hojas(); if (!c || !hs.length) return -1;
+    const x = c.getBoundingClientRect().left; let k = 0, mejor = Infinity;
+    hs.forEach((h, i) => { const d = Math.abs(h.getBoundingClientRect().left - x); if (d < mejor) { mejor = d; k = i; } }); return k;
+}
+function irAHoja(i, suave) {
+    const c = libroEl(), hs = hojas(); if (!c || !hs.length) return;
+    if (typeof i === 'string') { const k = hs.findIndex(h => h.id === i); i = k >= 0 ? k : 0; }
+    i = Math.max(0, Math.min(hs.length - 1, i));
+    const x = hs[i].getBoundingClientRect().left - c.getBoundingClientRect().left + c.scrollLeft;
+    const x0 = c.scrollLeft;
+    c.scrollTo({ left: x, behavior: suave ? 'smooth' : 'auto' }); setTimeout(actualizarLibro, suave ? 450 : 0);
+    if (suave && Math.abs(x - x0) > 4) setTimeout(() => { if (Math.abs(c.scrollLeft - x0) < 3) c.scrollTo({ left: x, behavior: 'auto' }); }, 180);   // si el navegador ignora el primer desplazamiento suave, se hace directo
+}
 </script>
 </body>
 </html>
