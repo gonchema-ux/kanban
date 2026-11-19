@@ -11,6 +11,9 @@
   (se muestra en la cabecera y en el título del navegador).
 
   LOG DE CAMBIOS (el más reciente primero)
+  20 [kanban_movil_20.html; el servidor sigue siendo Codigo_gs_movil_15.txt]: pantalla de tareas sin scroll de anchura ni de altura (solo el comentario oficial tiene scroll propio): se quitan la pestaña y la línea de actualización,
+       "+ Nueva Solicitud" pasa a la fila de En proceso, la ficha se reordena (caja con máquina, referencia, descripción, ubicación, solicita), comentario oficial una letra más grande y barra inferior con copiar, "Hoja X de N" (orden por número),
+       mover hoja ◀ ▶ y la navegación. El menú tiene "Recargar todo" (antes se hacía pulsando la línea de actualización).
   19 [kanban_movil_19.html; el servidor sigue siendo Codigo_gs_movil_15.txt]: (1) En proceso como libro: una tarea por hoja, flechas y "3 de N" abajo (pulsar el indicador abre la lista de hojas), deslizar con el dedo;
        (2) orden: pulsar "Hoja 3 de 6" pregunta la posición (las demás se desplazan) y las flechas ◀ ▶ mueven la hoja; se guarda en Sheets como antes; (3) botón "Copiar" en el comentario oficial de la ficha.
   18 [kanban_movil_18.html]: "Completar todas" solo exige el contador de máquina en las tareas que ya lo exigen (cambio de molde, cambio de matriz y molde sucio en máquina) y no en las máquinas de la pestaña Excepciones (contador_maquina).
@@ -1248,6 +1251,33 @@
         #posTxt { text-align: center; font-size: 15px; color: #0f172a; margin: 0 0 12px; line-height: 1.4; }
         .bo-th { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 6px 0 2px; } .bo-th .bo-t { margin: 0; }
         .bo-copy { flex: none; min-height: 34px; padding: 0 10px; border: 1px solid #0d233a; border-radius: 8px; background: #f1f5f9; font-size: 12px; font-weight: 800; color: #0d233a; }
+        /* ===== 20 · pantalla de tareas sin scroll (solo el comentario oficial con scroll propio) ===== */
+        body.con-libro { height: 100vh; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+        body.con-libro header { flex: none; position: relative; }
+        body.con-libro .main-tabs-bar, body.con-libro .last-update { display: none !important; }
+        body.con-libro #kanban-view { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; padding: 6px 8px 4px !important; overflow: hidden; }
+        body.con-libro #horasJornada { flex: none; position: relative; top: auto; margin: 0 0 6px; padding: 7px 12px; font-size: 14px; }
+        body.con-libro .hj-det { position: absolute; left: 0; right: 0; top: 100%; z-index: 60; background: inherit; border-radius: 0 0 12px 12px; padding: 8px 12px 12px; max-height: 60vh; overflow: auto; margin: 0; }
+        body.con-libro .kanban-board { flex: 1 1 auto; min-height: 0; display: flex !important; flex-direction: column; }
+        body.con-libro .kanban-board .column:nth-child(2) { flex: 1 1 auto; min-height: 0; display: flex !important; flex-direction: column; padding: 0 !important; }
+        body.con-libro .column:nth-child(2) .column-header { flex: none; display: flex; justify-content: space-between; align-items: center; margin: 0 0 6px; padding: 0 0 4px; }
+        body.con-libro #col-in-progress { flex: 1 1 auto; min-height: 0; height: auto; }
+        body.con-libro #col-in-progress > .card { height: 100%; display: flex; flex-direction: column; overflow-y: auto; padding: 8px 10px; }
+        body.con-libro #newRequestBtn { display: none !important; }
+        .btn-nueva-mini { flex: none; min-height: 34px; padding: 0 12px; border: 0; border-radius: 8px; background: #2563eb; color: #fff; font-size: 12.5px; font-weight: 700; }
+        .ki-box { border: 1px solid #94a3b8; border-radius: 8px; padding: 6px 10px; margin: 4px 0; font-size: 13.5px; line-height: 1.4; }
+        .ki-r { display: flex; gap: 6px; } .ki-r span, .ki-r2 i { color: #475569; font-style: normal; } .ki-r b { color: #0f172a; font-weight: 700; }
+        .ki-r2 { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; } .ki-r2 b { color: #0f172a; font-weight: 700; }
+        body.con-libro .kc-bor { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; margin: 4px 0; }
+        body.con-libro .bo-c { flex: 1 1 auto; min-height: 70px; overflow-y: auto; font-size: 14.5px; line-height: 1.4; padding-right: 4px; }
+        body.con-libro .card-actions-4 { flex: none; margin-top: auto; }
+        body.con-libro .libro-bar { position: static; flex: none; flex-direction: column; align-items: stretch; gap: 6px; padding: 6px 8px calc(6px + env(safe-area-inset-bottom)); box-shadow: 0 -2px 8px rgba(0,0,0,.1); }
+        .lb-fila1, .lb-fila2 { display: flex; gap: 8px; align-items: center; }
+        .libro-bar .lb-copy { flex: 0 0 62px; min-height: 46px; background: #facc15; border-color: #ca8a04; font-size: 22px; }
+        .libro-bar #lbHoja { flex: 1; min-height: 46px; font-size: 14px; font-weight: 600; background: #0d233a; color: #fff; border-color: #0d233a; } #lbHoja b { font-size: 16px; }
+        .lb-mover { flex: none; font-size: 11px; color: #64748b; }
+        .libro-bar #lbMovPrev, .libro-bar #lbMovNext { flex: 0 0 48px; min-height: 46px; font-size: 18px; }
+        .libro-bar .lb-fila2 button { min-height: 46px; }
     </style>
 </head>
 <body class="tab-limpieza">
@@ -1304,6 +1334,7 @@
         <button type="button" id="menuHistorico" onclick="menuIr('toggleHistoryView()')">📊 Histórico y filtros</button>
         <button type="button" onclick="menuIr('abrirPerf()')">⏱ Rendimiento</button>
         <button type="button" onclick="menuIr('abrirEscala()')">🔍 Tamaño de pantalla</button>
+        <button type="button" onclick="menuIr('fetchAllData(false, true)')">🔄 Recargar todo</button>
         <button type="button" id="menuSim" onclick="menuIr('abrirSimulador()')">⚙ Simulador de móvil</button>
         <button type="button" class="menu-salir" onclick="menuIr('cerrarSesion()')">🔒 Bloquear y salir</button>
     </nav>
@@ -1857,7 +1888,10 @@
         </div>
     </div>
 
-    <div class="libro-bar" id="libroBar"><button type="button" id="lbPrev" onclick="hojaMas(-1)" aria-label="Hoja anterior">◀</button><button type="button" id="lbPos" onclick="abrirListaHojas()">1 de 1</button><button type="button" id="lbNext" onclick="hojaMas(1)" aria-label="Hoja siguiente">▶</button></div>
+    <div class="libro-bar" id="libroBar">
+        <div class="lb-fila1"><button type="button" id="lbCopy" class="lb-copy" onclick="copiarComentarioActual()" title="Copiar el comentario oficial" aria-label="Copiar comentario">📋</button><button type="button" id="lbHoja" onclick="pedirPosicion(__libroId)">Hoja 1 de 1 ✎</button><span class="lb-mover">Mover hoja</span><button type="button" id="lbMovPrev" onclick="moverTarea(__libroId, -1)" aria-label="Mover antes">◀</button><button type="button" id="lbMovNext" onclick="moverTarea(__libroId, 1)" aria-label="Mover después">▶</button></div>
+        <div class="lb-fila2"><button type="button" id="lbPrev" onclick="hojaMas(-1)" aria-label="Hoja anterior">◀</button><button type="button" id="lbPos" onclick="abrirListaHojas()">1 de 1</button><button type="button" id="lbNext" onclick="hojaMas(1)" aria-label="Hoja siguiente">▶</button></div>
+    </div>
 
     <div class="modal" id="hojasModal">
         <div class="modal-content det-modal">
@@ -2175,7 +2209,7 @@
            ==================================================================== */
 
         // VERSIÓN de la aplicación. Se muestra en la cabecera y en el título. Subirla en cada cambio.
-        const APP_VERSION = '19';
+        const APP_VERSION = '20';
 
         // INTERRUPTOR "Reabrir": si es true se muestra el botón Reabrir en las tarjetas Completado OK
         // (y se pueden arrastrar). Está en false: una tarea acabada no se reabre; se crea una nueva
@@ -3640,7 +3674,7 @@
                 card.ondragstart = (e) => drag(e, task.id);
 
                 card.innerHTML = `
-                    <div class="mover-bar"><button type="button" class="mv-num" onclick="pedirPosicion('${task.id}')" title="Cambiar el orden de esta hoja">Hoja <b>${_pos + 1}</b> de ${inProgressTasks.length} ✎</button><span style="display:flex;gap:8px;align-items:center;"><small style="font-size:11px;color:#64748b;">Mover hoja</small><button type="button" onclick="moverTarea('${task.id}', -1)" ${_pos === 0 ? 'disabled' : ''} aria-label="Mover antes">◀</button><button type="button" onclick="moverTarea('${task.id}', 1)" ${_pos === inProgressTasks.length - 1 ? 'disabled' : ''} aria-label="Mover después">▶</button></span></div>
+                    
                     ${buildCardInnerEP(task, actionsHtml)}
                 `;
                 colInProgress.appendChild(card);
@@ -6641,6 +6675,48 @@ function copiarComentario(id) {
         const a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select(); try { document.execCommand('copy'); toastK('📋 Comentario copiado'); } catch (e) { alert(t); } a.remove();
     });
 }
+setTimeout(actualizarLibro, 300);
+
+/* ===== 20 · PANTALLA DE TAREAS SIN SCROLL: todo fijo y solo el comentario oficial con scroll propio ===== */
+function buildBorradorHtml(task) {
+    const d = leerBorrador('log:' + task.id), m = (d && d.modal) || {}, h = horasBorrador(task.id);
+    const tarea = m.logTaskModeSelect || '', fech = m['chk-fechador'] || '', com = (d && d.texto) || m.auditCommentInput || '', cont = String(m.machineCounterInput || '').trim();
+    const chk = CHK_CORTO.filter(([id]) => m[id] === 'OK' || m[id] === 'NOK');
+    if (!tarea && h === null && !fech && !com && !cont && !chk.length) return '';
+    const caja = (et, v) => v ? '<span class="bo-it">' + et + ' <b class="bo-box">' + escHtml(v) + '</b></span>' : '';
+    return '<div class="kc-bor"><div class="bo-top">' + caja('Tarea', tarea) + caja('Tiempo', h === null ? '' : fmtH(h) + ' h') + caja('Fechador', fech) + '</div>'
+        + (cont ? '<div class="bo-cont">Contador máquina <b class="bo-box">' + escHtml(cont) + '</b></div>' : '')
+        + (chk.length ? '<div class="bo-chk">' + chk.map(([id, et]) => '<span class="bo-ck"><i>' + et + '</i><em class="' + (m[id] === 'OK' ? 'ok' : 'nok') + '">' + m[id] + '</em></span>').join('') + '</div>' : '')
+        + (com ? '<div class="bo-t">Comentario oficial de tareas realizadas</div><div class="bo-c">' + escHtml(com) + '</div>' : '') + '</div>';
+}
+function buildCardInnerEP(task, actionsHtml) {
+    const ubic = String(task.ubicacion || '').trim(), mdesc = String(task.moldDesc || '').trim(), sinDato = v => v === '' || v === 'N/A' || v === '-';
+    const guardando = String(task.id).startsWith('tmp-'), idCorto = guardando ? '…' : String(parseInt(task.id, 10) || task.id);
+    return '<div class="kc2-top"><span class="kc-icon">' + getTaskIcon(task.desc) + '</span><span class="kc2-badges">' + (guardando ? '<span class="kc-age">⏳ Guardando…</span>' : getAgeBadgeHtml(task)) + '<span class="priority-badge badge-' + task.priority + '">' + task.priorityLabel + '</span></span></div>'
+        + '<div class="kc2-task"><span class="kc-task-label">Tarea a realizar:</span> <span class="kc-task-name">' + escHtml(task.desc) + '</span></div>'
+        + '<div class="ki-box"><div class="ki-r"><span>Máquina:</span> <b>' + escHtml(task.machine) + '</b></div>'
+        + '<div class="ki-r"><span>Referencia utillaje:</span> <b class="kc-mold-ref">' + escHtml(formatMoldRef(task.mold)) + '</b></div>'
+        + (sinDato(mdesc) ? '' : '<div class="ki-r"><span>Descripción:</span> <b>' + escHtml(mdesc) + '</b></div>')
+        + '<div class="ki-r2"><span><i>Ubicación:</i> <b>' + (sinDato(ubic) ? '-' : escHtml(ubic)) + '</b></span><span><i>Modo limpieza</i> <span class="cleaning-tag">' + escHtml(getModoTarea(task)) + '</span></span></div>'
+        + '<div class="ki-r2"><span><i>Solicita:</i> <b>' + escHtml(task.requester) + '</b></span><span><i>ID Solicitud:</i> <b>' + idCorto + '</b></span></div></div>'
+        + buildBorradorHtml(task) + '<div class="card-actions card-actions-4 ' + (guardando ? 'kc-disabled' : '') + '">' + actionsHtml + '</div>';
+}
+function actualizarLibro() {
+    const hs = hojas(), bar = $m('libroBar'); if (!bar) return;
+    const visible = hs.length > 0 && (typeof currentView === 'undefined' || currentView === 'kanban');
+    bar.style.display = visible ? 'flex' : 'none'; document.body.classList.toggle('con-libro', visible);
+    if (!visible) return;
+    const i = hojaActual(), n = hs.length; __libroId = hs[i] ? hs[i].id : null;
+    $m('lbPos').textContent = (i + 1) + ' de ' + n; $m('lbPrev').disabled = i <= 0; $m('lbNext').disabled = i >= n - 1;
+    $m('lbHoja').innerHTML = 'Hoja <b>' + (i + 1) + '</b> de ' + n + ' ✎'; $m('lbMovPrev').disabled = i <= 0; $m('lbMovNext').disabled = i >= n - 1;
+    const d = leerBorrador('log:' + __libroId), m = (d && d.modal) || {}; $m('lbCopy').disabled = !String((d && d.texto) || m.auditCommentInput || '').trim();
+}
+function copiarComentarioActual() { if (__libroId) copiarComentario(__libroId); }
+/* botón "+ Nueva Solicitud" dentro de la fila "EN PROCESO" */
+(function () {
+    const c = libroEl(); if (!c) return; const hd = c.previousElementSibling; if (!hd || hd.querySelector('.btn-nueva-mini')) return;
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'btn-nueva-mini'; b.textContent = '+ Nueva Solicitud'; b.onclick = () => { try { document.getElementById('newRequestBtn').click(); } catch (e) { } }; hd.appendChild(b);
+})();
 setTimeout(actualizarLibro, 300);
 </script>
 </body>
