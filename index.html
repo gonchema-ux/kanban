@@ -11,6 +11,9 @@
   (se muestra en la cabecera y en el título del navegador).
 
   LOG DE CAMBIOS (el más reciente primero)
+  22 [kanban_movil_22.html; el servidor sigue siendo Codigo_gs_movil_15.txt]: (1) redactor de limpieza por hojas (1 Tipo + Temperatura, 2 Transporte + Salida, 3 Desarmado/armado/placas/tratamiento, 4 Procesos adicionales + comentario) con "1 de 4" abajo y deslizar;
+       (2) en "Ubicación a sección" también se elige el transporte y entra en el texto; (3) el redactor recuerda lo marcado aunque se use "Usar este texto" y luego "Guardar borrador";
+       (4) la ficha de tarea muestra el checklist técnico completo en posiciones fijas (OK, NOK o en blanco).
   21 [kanban_movil_21.html; el servidor sigue siendo Codigo_gs_movil_15.txt]: un solo botón "+ Nueva Solicitud" (el flotante desaparece); los 4 botones de la tarea (movimientos, completado OK, nota, eliminar) fijos abajo para la hoja actual;
        fila inferior con copiar (izquierda), ◀, "N de M ✎" (pulsarlo cambia el orden) y ▶; se quitan "Hoja N de M" y "Mover hoja"; la pantalla se mantiene fija también sin tareas.
   20 [kanban_movil_20.html; el servidor sigue siendo Codigo_gs_movil_15.txt]: pantalla de tareas sin scroll de anchura ni de altura (solo el comentario oficial tiene scroll propio): se quitan la pestaña y la línea de actualización,
@@ -1294,6 +1297,18 @@
         .libro-bar .lb-fila1 .btn-complete { background: #28a745; color: #fff; border: 0; }
         .libro-bar .lb-fila1 .btn-comment { background: #dbeafe; color: #075985; border: 1px solid #bfdbfe; }
         .libro-bar .lb-fila1 .btn-delete { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+        /* ===== 22 ===== */
+        .bo-ck em.bl { background: #e2e8f0; color: #94a3b8; }
+        /* redactor de limpieza por hojas */
+        .rd-pgnav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 1160; display: flex; gap: 8px; align-items: center; padding: 6px 12px calc(6px + env(safe-area-inset-bottom)); background: #fff; }
+        .rd-pgnav button { flex: 1; min-height: 44px; border: 1px solid #94a3b8; border-radius: 10px; background: #f1f5f9; font-size: 20px; font-weight: 800; color: #0d233a; } .rd-pgnav button:disabled { opacity: .3; }
+        .rd-pgnav .rd-pg-n { flex: 2; text-align: center; min-height: 44px; line-height: 44px; border-radius: 10px; background: #0d233a; color: #fff; font-size: 16px; font-weight: 800; }
+        .rd-modal[data-pagina] .rd-act { bottom: calc(56px + env(safe-area-inset-bottom)) !important; }
+        .rd-modal[data-pagina] .rd-main { padding-bottom: 170px !important; }
+        .rd-modal[data-pagina]:not(.rd-ultima) .rd-panel > :not(.rd-act) { display: none !important; }
+        .rd-modal[data-pagina]:not(.rd-ultima) .rd-panel { padding: 0 !important; border: 0 !important; background: transparent !important; box-shadow: none !important; min-height: 0 !important; margin: 0 !important; }
+        .rd-modal.rd-ultima .rd-xrow { min-height: 36px; padding: 3px 8px; } .rd-modal.rd-ultima .rd-segb { min-height: 34px; }
+        .rd-tres .rd-chips, .rd-tres .rd-strip .rd-chips { grid-template-columns: repeat(3, 1fr) !important; } .rd-tres .rd-chip { font-size: 12px !important; min-height: 58px !important; padding: 4px !important; }
     </style>
 </head>
 <body class="tab-limpieza">
@@ -2226,7 +2241,7 @@
            ==================================================================== */
 
         // VERSIÓN de la aplicación. Se muestra en la cabecera y en el título. Subirla en cada cambio.
-        const APP_VERSION = '21';
+        const APP_VERSION = '22';
 
         // INTERRUPTOR "Reabrir": si es true se muestra el botón Reabrir en las tarjetas Completado OK
         // (y se pueden arrastrar). Está en false: una tarea acabada no se reabre; se crea una nueva
@@ -5289,7 +5304,7 @@ const RedactorLimpieza = (() => {
   const FRASES = {
     sacar_caliente: "Desmonto y extraigo {utillaje} de máquina{temp}, transporto a la {sec} {transporte}",
     sacar_frio: "Desmonto y extraigo {utillaje} de máquina, transporto a la {sec} {transporte}",
-    ubicacion: "Cojo {utillaje} según su ubicación y transporto a {sec}",
+    ubicacion: "Cojo {utillaje} según su ubicación y transporto a {sec} {transporte}",
     sec_nombre: "sección",
     sec_trat_nombre: "sección de tratamiento",
     temp_consigna: " a una tº consigna de {tempC} ºC",
@@ -5551,7 +5566,7 @@ const RDUI = (() => {
     return [
       { id: 'tipo', t: 'Tipo de limpieza', icon: '🧰', col: 1, fase: 'Inicio', c: [R('tipo', [['portatil', 'Limpieza con portátil'], ['seccion', 'Limpieza en sección'], ['seccion_tratamiento', 'Limpieza en sección de tratamiento']])] },
       { id: 'temp', t: 'Temperatura del molde', icon: '🌡️', col: 1, fase: 'Inicio', show: any, c: [R('temp', [['frio', 'Frío'], ['caliente', 'Caliente']], undefined, undefined, { caliente: 'tempC' }), N('tempC', 'Temperatura consigna (ºC)', () => S.temp === 'caliente', 'number')] },
-      { id: 'transp', t: () => 'Transporte a la ' + DEST(), icon: '🚚', col: 1, fase: 'Transporte', show: sec, c: [R('entrada', [['sacar', 'Sacar molde y/o auxiliar de máquina'], ['ubicacion', () => 'Ubicación a ' + DEST()]]), R('utillaje', UT, () => S.entrada, '¿Qué utillajes?'), R('transporte', TR, () => S.entrada === 'sacar', 'Transporte')] },
+      { id: 'transp', t: () => 'Transporte a la ' + DEST(), icon: '🚚', col: 1, fase: 'Transporte', show: sec, c: [R('entrada', [['sacar', 'Sacar molde y/o auxiliar de máquina'], ['ubicacion', () => 'Ubicación a ' + DEST()]]), R('utillaje', UT, () => S.entrada, '¿Qué utillajes?'), R('transporte', TR, () => !!S.entrada, 'Transporte')] },
       { id: 'desarm', t: 'Desarmado de molde', icon: '🔧', col: 1, fase: 'Desarmado y armado', show: sec, c: [M('desarmado', DES)] },
       { id: 'modo', t: 'Modo de limpieza con portátil', icon: '🔌', col: 1, fase: 'Limpieza', show: por, c: [R('cepillado', [[true, 'Cepillo con taladro (placas marcadas)'], [false, 'Sin cepillo']]), R('modoPortatil', [['normal', 'Limpieza normal'], ['struktol', 'Limpieza con struktol']])] },
       { id: 'placas', t: 'Limpieza de placas', icon: '🧽', col: 2, fase: 'Limpieza', show: any, c: [M('placas', RedactorLimpieza.ORD.placas.map(p => [p, p[0].toUpperCase() + p.slice(1)]))] },
@@ -5762,7 +5777,7 @@ const RDUI = (() => {
     mod.append(hd, h('div', 'rd-banner vacio'), mainA(vis)); ST.root.append(mod);
     ST.root.querySelectorAll('.rd-scroll').forEach((e, i) => { if (keep[i]) e.scrollTop = keep[i]; });
     const mainEl = ST.root.querySelector('.rd-main'); if (mainEl && keepMain) mainEl.scrollTop = keepMain;
-    actualizar(); ajustar();
+    actualizar(); ajustar(); if (window.rdPostRender) window.rdPostRender(ST);
     if (ST.foco) { const el = ST.root.querySelector('input[data-k="' + ST.foco + '"]'); ST.foco = null; if (el) { el.focus({ preventScroll: true }); if (el.select) el.select(); } }
     if (mainEl) mainEl.scrollTop = keepMain;   // M1: el scroll no se mueve al marcar opciones (ni por el foco ni por el cambio de alto)
   }
@@ -5873,7 +5888,7 @@ function guardarBorradorModal(origen, redactorObj, cerrarModal) {
     const modal = {};
     document.getElementById('logForm').querySelectorAll('input,select,textarea').forEach(el => { if (el.id && !['hidden', 'button', 'submit'].includes(el.type)) modal[el.id] = el.value; });
     const prev = leerBorrador(clave) || {};
-    const obj = { fecha: Date.now(), modal: modal, redactor: redactorObj || prev.redactor || (prev.kind && prev.S ? prev : null), texto: document.getElementById('auditCommentInput').value };
+    const obj = { fecha: Date.now(), modal: modal, redactor: redactorObj || ((rdUltimo.log && rdUltimo.log.kind && rdUltimo.log.S) ? Object.assign({ fecha: Date.now(), texto: document.getElementById('auditCommentInput').value }, rdUltimo.log) : null) || prev.redactor || (prev.kind && prev.S ? prev : null), texto: document.getElementById('auditCommentInput').value };
     const m = leerBorradores(); m[clave] = obj; escribirBorradores(m);
     dbBorradores[clave] = obj;
     sendApiPost({ action: 'SAVE_BORRADOR', payload: { clave: clave, fecha: obj.fecha, datos: JSON.stringify(obj) } });
@@ -6766,6 +6781,52 @@ function irAHoja(i, suave) {
     c.scrollTo({ left: x, behavior: suave ? 'smooth' : 'auto' }); setTimeout(actualizarLibro, suave ? 450 : 0);
     if (suave && Math.abs(x - x0) > 4) setTimeout(() => { if (Math.abs(c.scrollLeft - x0) < 3) c.scrollTo({ left: x, behavior: 'auto' }); }, 180);   // si el navegador ignora el primer desplazamiento suave, se hace directo
 }
+
+/* ===== 22 ===== */
+/* --- Ficha: checklist técnico SIEMPRE completo y en posición fija (marcado OK / NOK, o en blanco) --- */
+function buildBorradorHtml(task) {
+    const d = leerBorrador('log:' + task.id), m = (d && d.modal) || {}, h = horasBorrador(task.id);
+    const tarea = m.logTaskModeSelect || '', fech = m['chk-fechador'] || '', com = (d && d.texto) || m.auditCommentInput || '', cont = String(m.machineCounterInput || '').trim();
+    const hayChk = CHK_CORTO.some(([id]) => m[id] === 'OK' || m[id] === 'NOK');
+    if (!tarea && h === null && !fech && !com && !cont && !hayChk) return '';
+    const caja = (et, v) => v ? '<span class="bo-it">' + et + ' <b class="bo-box">' + escHtml(v) + '</b></span>' : '';
+    return '<div class="kc-bor"><div class="bo-top">' + caja('Tarea', tarea) + caja('Tiempo', h === null ? '' : fmtH(h) + ' h') + caja('Fechador', fech) + '</div>'
+        + (cont ? '<div class="bo-cont">Contador máquina <b class="bo-box">' + escHtml(cont) + '</b></div>' : '')
+        + '<div class="bo-chk">' + CHK_CORTO.map(([id, et]) => { const v = m[id] === 'OK' || m[id] === 'NOK' ? m[id] : ''; return '<span class="bo-ck"><i>' + et + '</i><em class="' + (v === 'OK' ? 'ok' : v === 'NOK' ? 'nok' : 'bl') + '">' + (v || '–') + '</em></span>'; }).join('') + '</div>'
+        + (com ? '<div class="bo-t">Comentario oficial de tareas realizadas</div><div class="bo-c">' + escHtml(com) + '</div>' : '') + '</div>';
+}
+/* --- Redactor de limpieza en hojas: 1 Tipo + Temperatura · 2 Transporte + Salida · 3 Desarmado/armado/placas/tratamiento · 4 Procesos adicionales + comentario --- */
+const RD_PAG_L = [['Tipo de limpieza', 'Temperatura del molde'], ['Transporte a la', 'Salir de sección'], ['Desarmado de molde', 'Armado de molde', 'Limpieza de placas', 'Limpieza con tratamiento', 'Modo de limpieza con portátil'], ['Procesos adicionales']];
+let rdPagina = 0, __rdST = null;
+function rdPaginas(root) {
+    const hay = [false, false, false, true];
+    root.querySelectorAll('.rd-card, .rd-strip').forEach(el => {
+        const tt = ((el.querySelector('.rd-t, .rd-tt') || {}).textContent || ''); let p = 2;
+        for (let k = 0; k < RD_PAG_L.length; k++) if (RD_PAG_L[k].some(x => tt.indexOf(x) >= 0)) { p = k; break; }
+        el.dataset.pg = p; hay[p] = true; el.classList.toggle('rd-tres', tt.indexOf('Tipo de limpieza') >= 0);
+    });
+    return [0, 1, 2, 3].filter(p => hay[p]);
+}
+function rdMostrar() {
+    const st = __rdST; if (!st || !st.root) return; const root = st.root, pags = rdPaginas(root), n = pags.length;
+    rdPagina = Math.max(0, Math.min(n - 1, rdPagina)); const cur = pags[rdPagina];
+    root.querySelectorAll('.rd-card, .rd-strip').forEach(el => { el.style.display = (parseInt(el.dataset.pg, 10) === cur) ? '' : 'none'; });
+    const mod = root.querySelector('.rd-modal'); if (!mod) return;
+    mod.classList.toggle('rd-ultima', cur === 3); mod.dataset.pagina = cur;
+    let nav = mod.querySelector('.rd-pgnav');
+    if (!nav) { nav = document.createElement('div'); nav.className = 'rd-pgnav'; nav.innerHTML = '<button type="button" class="rd-pg-a">◀</button><span class="rd-pg-n"></span><button type="button" class="rd-pg-s">▶</button>'; mod.appendChild(nav);
+        nav.querySelector('.rd-pg-a').onclick = () => rdIr(rdPagina - 1); nav.querySelector('.rd-pg-s').onclick = () => rdIr(rdPagina + 1); }
+    nav.querySelector('.rd-pg-n').textContent = (rdPagina + 1) + ' de ' + n; nav.querySelector('.rd-pg-a').disabled = rdPagina <= 0; nav.querySelector('.rd-pg-s').disabled = rdPagina >= n - 1;
+}
+function rdIr(p) { rdPagina = p; rdMostrar(); const mn = __rdST && __rdST.root.querySelector('.rd-main'); if (mn) mn.scrollTop = 0; }
+window.rdPostRender = function (st) {
+    if (!st || st.kind !== 'limpieza') return;
+    if (__rdST !== st) { __rdST = st; rdPagina = 0; }
+    rdMostrar();
+    const mn = st.root.querySelector('.rd-main'); if (mn && !mn.dataset.sw) { mn.dataset.sw = '1'; let x0 = 0, y0 = 0;
+        mn.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, { passive: true });
+        mn.addEventListener('touchend', e => { const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0; if (Math.abs(dx) > 70 && Math.abs(dy) < 40 && !/INPUT|TEXTAREA|SELECT/.test((e.target || {}).tagName || '')) rdIr(rdPagina + (dx < 0 ? 1 : -1)); }, { passive: true }); }
+};
 </script>
 </body>
 </html>
