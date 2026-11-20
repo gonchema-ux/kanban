@@ -11,6 +11,7 @@
   (se muestra en la cabecera y en el título del navegador).
 
   LOG DE CAMBIOS (el más reciente primero)
+  25 [kanban_movil_25.html; el servidor sigue siendo Codigo_gs_movil_15.txt]: redactor de montadores (cambio de molde / matriz / intervención) por hojas, según modificaciones_m23.pdf: MOLDE en 3 hojas (1 Tipo de montaje · 2 Temperatura + estado del molde saliente · 3 Molde entrante + procesos adicionales + comentario) y MATRIZ en 2 (1 Tipo + matriz saliente · 2 matriz entrante + comentario). Botones ◀ ▶ con "n de N" y deslizar, igual que en limpieza; el comentario generado y las observaciones salen en la última hoja. La temperatura consigna va en la misma fila que Frío/Caliente.
   24 [kanban_movil_24.html; el servidor sigue siendo Codigo_gs_movil_15.txt]: (1) redactor de limpieza: los 3 botones de Tipo de limpieza van en una sola fila y en Salir de sección la temperatura de montaje sale justo debajo de la elección, antes de los utillajes (como en la propuesta); (2) "Completar todas" oculto: ya no se ven abrirse las ventanas de cada tarea, sale una pantalla de progreso (n de N, barra y tarea actual); los avisos de la aplicación siguen saliendo por encima y, si algo falla, se para y deja abierta la ventana de esa tarea.
   23 [kanban_movil_23.html; el servidor sigue siendo Codigo_gs_movil_15.txt]: (1) arreglo del redactor de limpieza por hojas: los puntos 1 (Tipo) y 2 (Temperatura) se quedaban visibles en todas las hojas porque su CSS (display grid !important) anulaba el ocultar de la hoja; ahora solo salen en la hoja 1 y cada punto en su hoja.
   22 [kanban_movil_22.html; el servidor sigue siendo Codigo_gs_movil_15.txt]: (1) redactor de limpieza por hojas (1 Tipo + Temperatura, 2 Transporte + Salida, 3 Desarmado/armado/placas/tratamiento, 4 Procesos adicionales + comentario) con "1 de 4" abajo y deslizar;
@@ -1317,6 +1318,10 @@
         #pgTodas .pg-t { font-size: 17px; font-weight: 800; color: #0d233a; } #pgTodas .pg-n { font-size: 34px; font-weight: 800; color: #0d233a; margin: 10px 0 8px; }
         #pgTodas .pg-bar { height: 12px; background: #e2e8f0; border-radius: 8px; overflow: hidden; } #pgTodas .pg-bar i { display: block; height: 100%; width: 0; background: #0f766e; transition: width .35s; }
         #pgTodas .pg-c { margin-top: 12px; font-size: 14px; color: #334155; min-height: 38px; } #pgTodas .pg-a { margin-top: 10px; font-size: 12px; color: #64748b; }
+        /* 25 · temperatura consigna en la misma fila que Frío/Caliente (redactor de montadores) */
+        .rd-strip.rd-temprow > .rd-ctl { flex-direction: row !important; flex-wrap: nowrap !important; align-items: flex-end !important; gap: 8px; }
+        .rd-strip.rd-temprow .rd-chips { flex: 1.15 1 0; min-width: 0; margin-top: 0 !important; }
+        .rd-strip.rd-temprow .rd-field { flex: 1 1 0; min-width: 0; margin: 0; } .rd-strip.rd-temprow .rd-field label { font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; } .rd-strip.rd-temprow .rd-field .rd-in { width: 100%; min-height: 44px; }
 </style>
 </head>
 <body class="tab-limpieza">
@@ -2249,7 +2254,7 @@
            ==================================================================== */
 
         // VERSIÓN de la aplicación. Se muestra en la cabecera y en el título. Subirla en cada cambio.
-        const APP_VERSION = '24';
+        const APP_VERSION = '25';
 
         // INTERRUPTOR "Reabrir": si es true se muestra el botón Reabrir en las tarjetas Completado OK
         // (y se pueden arrastrar). Está en false: una tarea acabada no se reabre; se crea una nueva
@@ -6820,22 +6825,25 @@ function buildBorradorHtml(task) {
 }
 /* --- Redactor de limpieza en hojas: 1 Tipo + Temperatura · 2 Transporte + Salida · 3 Desarmado/armado/placas/tratamiento · 4 Procesos adicionales + comentario --- */
 const RD_PAG_L = [['Tipo de limpieza', 'Temperatura del molde'], ['Transporte a la', 'Salir de sección'], ['Desarmado de molde', 'Armado de molde', 'Limpieza de placas', 'Limpieza con tratamiento', 'Modo de limpieza con portátil'], ['Procesos adicionales']];
+const RD_PAG_MO = [['Tipo de montaje'], ['Temperatura del molde saliente', 'Estado del molde saliente'], ['Estado del molde entrante', 'Procesos adicionales']];
+const RD_PAG_MA = [['Tipo de montaje', 'Matriz saliente'], ['Matriz entrante']];
 let rdPagina = 0, __rdST = null;
 function rdPaginas(root) {
-    const hay = [false, false, false, true];
+    const st = __rdST, mont = !!st && st.kind === 'montadores', PAG = mont ? (st.S.tipo === 'matriz' ? RD_PAG_MA : RD_PAG_MO) : RD_PAG_L, N = PAG.length;
+    const hay = new Array(N).fill(false); hay[N - 1] = true;   // la última hoja (con el comentario generado) siempre existe
     root.querySelectorAll('.rd-card, .rd-strip').forEach(el => {
-        const tt = ((el.querySelector('.rd-t, .rd-tt') || {}).textContent || ''); let p = 2;
-        for (let k = 0; k < RD_PAG_L.length; k++) if (RD_PAG_L[k].some(x => tt.indexOf(x) >= 0)) { p = k; break; }
-        el.dataset.pg = p; hay[p] = true; el.classList.toggle('rd-tres', tt.indexOf('Tipo de limpieza') >= 0);
+        const tt = ((el.querySelector('.rd-t, .rd-tt') || {}).textContent || ''); let p = mont ? N - 1 : 2;
+        for (let k = 0; k < N; k++) if (PAG[k].some(x => tt.indexOf(x) >= 0)) { p = k; break; }
+        el.dataset.pg = p; hay[p] = true; el.classList.toggle('rd-tres', tt.indexOf('Tipo de limpieza') >= 0); el.classList.toggle('rd-temprow', mont && tt.indexOf('Temperatura del molde') >= 0);
     });
-    return [0, 1, 2, 3].filter(p => hay[p]);
+    return hay.map((v, i) => v ? i : -1).filter(i => i >= 0);
 }
 function rdMostrar() {
     const st = __rdST; if (!st || !st.root) return; const root = st.root, pags = rdPaginas(root), n = pags.length;
     rdPagina = Math.max(0, Math.min(n - 1, rdPagina)); const cur = pags[rdPagina];
     root.querySelectorAll('.rd-card, .rd-strip').forEach(el => { if (parseInt(el.dataset.pg, 10) === cur) el.style.removeProperty('display'); else el.style.setProperty('display', 'none', 'important'); });
     const mod = root.querySelector('.rd-modal'); if (!mod) return;
-    mod.classList.toggle('rd-ultima', cur === 3); mod.dataset.pagina = cur;
+    mod.classList.toggle('rd-ultima', rdPagina === n - 1); mod.dataset.pagina = cur;
     let nav = mod.querySelector('.rd-pgnav');
     if (!nav) { nav = document.createElement('div'); nav.className = 'rd-pgnav'; nav.innerHTML = '<button type="button" class="rd-pg-a">◀</button><span class="rd-pg-n"></span><button type="button" class="rd-pg-s">▶</button>'; mod.appendChild(nav);
         nav.querySelector('.rd-pg-a').onclick = () => rdIr(rdPagina - 1); nav.querySelector('.rd-pg-s').onclick = () => rdIr(rdPagina + 1); }
@@ -6843,7 +6851,7 @@ function rdMostrar() {
 }
 function rdIr(p) { rdPagina = p; rdMostrar(); const mn = __rdST && __rdST.root.querySelector('.rd-main'); if (mn) mn.scrollTop = 0; }
 window.rdPostRender = function (st) {
-    if (!st || st.kind !== 'limpieza') return;
+    if (!st || (st.kind !== 'limpieza' && st.kind !== 'montadores')) return;
     if (__rdST !== st) { __rdST = st; rdPagina = 0; }
     rdMostrar();
     const mn = st.root.querySelector('.rd-main'); if (mn && !mn.dataset.sw) { mn.dataset.sw = '1'; let x0 = 0, y0 = 0;
