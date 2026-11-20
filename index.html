@@ -11,6 +11,7 @@
   (se muestra en la cabecera y en el título del navegador).
 
   LOG DE CAMBIOS (el más reciente primero)
+  23 [kanban_movil_23.html; el servidor sigue siendo Codigo_gs_movil_15.txt]: (1) arreglo del redactor de limpieza por hojas: los puntos 1 (Tipo) y 2 (Temperatura) se quedaban visibles en todas las hojas porque su CSS (display grid !important) anulaba el ocultar de la hoja; ahora solo salen en la hoja 1 y cada punto en su hoja.
   22 [kanban_movil_22.html; el servidor sigue siendo Codigo_gs_movil_15.txt]: (1) redactor de limpieza por hojas (1 Tipo + Temperatura, 2 Transporte + Salida, 3 Desarmado/armado/placas/tratamiento, 4 Procesos adicionales + comentario) con "1 de 4" abajo y deslizar;
        (2) en "Ubicación a sección" también se elige el transporte y entra en el texto; (3) el redactor recuerda lo marcado aunque se use "Usar este texto" y luego "Guardar borrador";
        (4) la ficha de tarea muestra el checklist técnico completo en posiciones fijas (OK, NOK o en blanco).
@@ -2241,7 +2242,7 @@
            ==================================================================== */
 
         // VERSIÓN de la aplicación. Se muestra en la cabecera y en el título. Subirla en cada cambio.
-        const APP_VERSION = '22';
+        const APP_VERSION = '23';
 
         // INTERRUPTOR "Reabrir": si es true se muestra el botón Reabrir en las tarjetas Completado OK
         // (y se pueden arrastrar). Está en false: una tarea acabada no se reabre; se crea una nueva
@@ -6810,7 +6811,7 @@ function rdPaginas(root) {
 function rdMostrar() {
     const st = __rdST; if (!st || !st.root) return; const root = st.root, pags = rdPaginas(root), n = pags.length;
     rdPagina = Math.max(0, Math.min(n - 1, rdPagina)); const cur = pags[rdPagina];
-    root.querySelectorAll('.rd-card, .rd-strip').forEach(el => { el.style.display = (parseInt(el.dataset.pg, 10) === cur) ? '' : 'none'; });
+    root.querySelectorAll('.rd-card, .rd-strip').forEach(el => { if (parseInt(el.dataset.pg, 10) === cur) el.style.removeProperty('display'); else el.style.setProperty('display', 'none', 'important'); });
     const mod = root.querySelector('.rd-modal'); if (!mod) return;
     mod.classList.toggle('rd-ultima', cur === 3); mod.dataset.pagina = cur;
     let nav = mod.querySelector('.rd-pgnav');
