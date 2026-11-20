@@ -11,6 +11,7 @@
   (se muestra en la cabecera y en el título del navegador).
 
   LOG DE CAMBIOS (el más reciente primero)
+  24 [kanban_movil_24.html; el servidor sigue siendo Codigo_gs_movil_15.txt]: (1) redactor de limpieza: los 3 botones de Tipo de limpieza van en una sola fila y en Salir de sección la temperatura de montaje sale justo debajo de la elección, antes de los utillajes (como en la propuesta); (2) "Completar todas" oculto: ya no se ven abrirse las ventanas de cada tarea, sale una pantalla de progreso (n de N, barra y tarea actual); los avisos de la aplicación siguen saliendo por encima y, si algo falla, se para y deja abierta la ventana de esa tarea.
   23 [kanban_movil_23.html; el servidor sigue siendo Codigo_gs_movil_15.txt]: (1) arreglo del redactor de limpieza por hojas: los puntos 1 (Tipo) y 2 (Temperatura) se quedaban visibles en todas las hojas porque su CSS (display grid !important) anulaba el ocultar de la hoja; ahora solo salen en la hoja 1 y cada punto en su hoja.
   22 [kanban_movil_22.html; el servidor sigue siendo Codigo_gs_movil_15.txt]: (1) redactor de limpieza por hojas (1 Tipo + Temperatura, 2 Transporte + Salida, 3 Desarmado/armado/placas/tratamiento, 4 Procesos adicionales + comentario) con "1 de 4" abajo y deslizar;
        (2) en "Ubicación a sección" también se elige el transporte y entra en el texto; (3) el redactor recuerda lo marcado aunque se use "Usar este texto" y luego "Guardar borrador";
@@ -1310,7 +1311,13 @@
         .rd-modal[data-pagina]:not(.rd-ultima) .rd-panel { padding: 0 !important; border: 0 !important; background: transparent !important; box-shadow: none !important; min-height: 0 !important; margin: 0 !important; }
         .rd-modal.rd-ultima .rd-xrow { min-height: 36px; padding: 3px 8px; } .rd-modal.rd-ultima .rd-segb { min-height: 34px; }
         .rd-tres .rd-chips, .rd-tres .rd-strip .rd-chips { grid-template-columns: repeat(3, 1fr) !important; } .rd-tres .rd-chip { font-size: 12px !important; min-height: 58px !important; padding: 4px !important; }
-    </style>
+            /* 24 */ .rd-tres .rd-chips > .rd-chip:last-child:nth-child(2n+1) { grid-column: auto !important; }
+        #pgTodas { position: fixed; inset: 0; z-index: 2900; background: rgba(13,35,58,.94); display: flex; align-items: center; justify-content: center; padding: 24px; font-family: "Segoe UI", system-ui, Arial, sans-serif; }
+        #pgTodas .pg-box { width: 100%; max-width: 360px; background: #fff; border-radius: 16px; padding: 22px 20px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,.35); }
+        #pgTodas .pg-t { font-size: 17px; font-weight: 800; color: #0d233a; } #pgTodas .pg-n { font-size: 34px; font-weight: 800; color: #0d233a; margin: 10px 0 8px; }
+        #pgTodas .pg-bar { height: 12px; background: #e2e8f0; border-radius: 8px; overflow: hidden; } #pgTodas .pg-bar i { display: block; height: 100%; width: 0; background: #0f766e; transition: width .35s; }
+        #pgTodas .pg-c { margin-top: 12px; font-size: 14px; color: #334155; min-height: 38px; } #pgTodas .pg-a { margin-top: 10px; font-size: 12px; color: #64748b; }
+</style>
 </head>
 <body class="tab-limpieza">
 
@@ -2242,7 +2249,7 @@
            ==================================================================== */
 
         // VERSIÓN de la aplicación. Se muestra en la cabecera y en el título. Subirla en cada cambio.
-        const APP_VERSION = '23';
+        const APP_VERSION = '24';
 
         // INTERRUPTOR "Reabrir": si es true se muestra el botón Reabrir en las tarjetas Completado OK
         // (y se pueden arrastrar). Está en false: una tarea acabada no se reabre; se crea una nueva
@@ -5574,7 +5581,7 @@ const RDUI = (() => {
       { id: 'trat', t: 'Limpieza con tratamiento MS550BT', icon: '🧪', col: 2, fase: 'Limpieza', show: any, c: [R('tratamiento', [['si', 'Sí'], ['no', 'No']]), M('tratPlacas', RedactorLimpieza.ORD.tratPlacas.map(p => [p, 'T1 ' + p]), () => S.tratamiento === 'si')] },
       { id: 'arm', t: 'Armado de molde', icon: '🔩', col: 1, fase: 'Desarmado y armado', show: sec, c: [M('armado', DES)] },
       { id: 'proc', t: 'Procesos adicionales', icon: '📋', col: 2, fase: 'Cierre', show: any, x: RedactorLimpieza.EXTRAS.filter(e => sec() ? e[2] : e[3]).map(e => ({ k: e[0], l: XL_L[e[0]] })) },
-      { id: 'salida', t: 'Salir de sección', icon: '🚪', col: 2, fase: 'Cierre', show: sec, c: [R('salida', [['montar', 'Montar en máquina'], ['guardar', 'Guardar en ubicación'], ['taller', 'Enviar a taller']], undefined, undefined, { montar: 'tempMontaje' }), R('salidaUtillaje', UT, () => S.salida, '¿Qué utillajes?'), N('tempMontaje', () => 'Temperatura de montaje (ºC) · ' + (S.temp === 'caliente' ? 'obligatoria' : 'opcional'), () => S.salida === 'montar', 'number')] },
+      { id: 'salida', t: 'Salir de sección', icon: '🚪', col: 2, fase: 'Cierre', show: sec, c: [R('salida', [['montar', 'Montar en máquina'], ['guardar', 'Guardar en ubicación'], ['taller', 'Enviar a taller']], undefined, undefined, { montar: 'tempMontaje' }), N('tempMontaje', () => 'Temperatura de montaje (ºC) · ' + (S.temp === 'caliente' ? 'obligatoria' : 'opcional'), () => S.salida === 'montar', 'number'), R('salidaUtillaje', UT, () => S.salida, '¿Qué utillajes?')] },
     ];
   }
   function cfgM0(S) {
@@ -6603,26 +6610,41 @@ async function completarTodas() {
     let msg = 'Se van a confirmar y guardar ' + en.length + ' tareas como Completado OK (' + fmtH(total) + ' h en total).';
     if (Math.abs(total - HORAS_JORNADA) > 0.005) msg += '\n⚠️ El total no es ' + fmtH(HORAS_JORNADA) + ' h.';
     if (!(await dialogoConfirmar(msg + '\n¿Continuar?'))) return;
-    completandoTodas = true; const ids = en.map(t => String(t.id)); let hechas = 0, parada = null;
+    completandoTodas = true; const ids = en.map(t => String(t.id)); let hechas = 0, parada = null; pgTodasAbrir(ids.length);
     try {
         for (const id of ids) {
             const t = tasks.find(x => String(x.id) === id);
             if (!t || t.status !== 'in-progress') continue;                                                    // ya completada: no se repite
             if (registros.some(r => sameId(r.idTarea, id) && String(r.tipo).trim().toLowerCase() === 'completado' && !esRegistroAnulado(r))) continue;
             if (document.querySelector('.dlg-ov') || [...document.querySelectorAll('.modal')].some(m => m.style.display === 'flex')) { parada = [t, 'había una ventana abierta']; break; }
+            pgTodasPaso(hechas, ids.length, t);
             requestMove(id, 'done'); await esperaMs(700);
             const v = i => { const e = $m(i); return e ? String(e.value || '').trim() : ''; };
             if (!v('logTaskModeSelect') || !v('taskTimeInput') || !v('auditCommentInput') || (requiereContador(t) && !v('machineCounterInput'))) { parada = [t, 'no se cargaron todos los datos del borrador']; break; }
             $m('logForm').requestSubmit();
             const r = await esperarGuardado(id);
             if (r !== 'ok') { parada = [t, r === 'aviso' ? 'la aplicación mostró un aviso' : 'faltaba algún dato']; break; }
-            hechas++; await esperaMs(900);
+            hechas++; pgTodasPaso(hechas, ids.length, null); await esperaMs(900);
         }
-    } finally { completandoTodas = false; }
+    } finally { completandoTodas = false; pgTodasCerrar(); }
     actualizarContadorHoras();
     if (parada) alert('⏹ Me paré en "' + (parada[0].desc || parada[0].tarea || '') + ' · Máq. ' + (parada[0].machine || '-') + '" (' + parada[1] + '). Completadas: ' + hechas + ' de ' + ids.length + '. El resto no se ha tocado. Revisa la ventana abierta y vuelve a pulsar "Completar todas": las ya guardadas no se repiten.');
     else alert('✅ Jornada cerrada: ' + hechas + ' tareas completadas y guardadas. Ya puedes empezar una nueva jornada.');
 }
+
+/* ===== 24 · Completar todas oculto con pantalla de progreso ===== */
+function pgTodasAbrir(total) {
+    let d = document.getElementById('pgTodas'); if (d) d.remove();
+    d = document.createElement('div'); d.id = 'pgTodas';
+    d.innerHTML = '<div class="pg-box"><div class="pg-t">Completando la jornada…</div><div class="pg-n" id="pgN">0 de ' + total + '</div><div class="pg-bar"><i id="pgB"></i></div><div class="pg-c" id="pgC">Preparando…</div><div class="pg-a">No cierres la aplicación ni pulses nada hasta que termine.</div></div>';
+    document.body.appendChild(d);
+}
+function pgTodasPaso(hechas, total, t) {
+    const n = document.getElementById('pgN'), b = document.getElementById('pgB'), c = document.getElementById('pgC'); if (!n) return;
+    n.textContent = hechas + ' de ' + total; b.style.width = Math.round(hechas * 100 / total) + '%';
+    c.textContent = t ? ('Guardando: ' + (t.desc || t.tarea || '') + ' · Máq. ' + (t.machine || '-')) : (hechas >= total ? 'Terminado' : 'Siguiente tarea…');
+}
+function pgTodasCerrar() { const d = document.getElementById('pgTodas'); if (d) d.remove(); }
 
 /* ===== 18 · el contador de máquina solo se exige donde la aplicación ya lo exige ===== */
 /* Regla de siempre: cambio de molde, cambio de matriz o molde sucio en máquina, salvo las máquinas de la pestaña Excepciones (columna contador_maquina). */
